@@ -7,16 +7,19 @@ from fastapi import FastAPI
 from src.core.config import BaseSettings, settings
 
 from .chat.router import chat_router
+from .core.cache import CacheProtocol
 from .core.health_check import health_router
 from .core.middleware import LoggingMiddleware
+from .infrastructure.cache.cache_service import RedisCacheService
 
 
 class App:
     """Main application class."""
 
-    def __init__(self, settings: BaseSettings):
+    def __init__(self, settings: BaseSettings, cache: CacheProtocol | None = None):
         self.settings = settings
         self.__app = FastAPI(**settings.set_app_attributes)
+        self.__app.state.cache = cache
         self.__setup_middleware()
         self.__add_routes()
 
@@ -34,7 +37,8 @@ class App:
 
 
 def initialize_application() -> FastAPI:
-    return App(settings=settings)()
+    cache = RedisCacheService()
+    return App(settings=settings, cache=cache)()
 
 
 app = initialize_application()

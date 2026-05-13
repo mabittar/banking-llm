@@ -40,3 +40,4 @@ archive.zip
 
 *.egg-info
 .langgraph_api
+coverage/

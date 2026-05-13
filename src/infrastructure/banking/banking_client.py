@@ -1,15 +1,15 @@
 from urllib.parse import quote
 
-from ..core.config import settings
-from ..core.logger import logger
+from ...core.config import settings
+from ...core.logger import logger
 from .banking_auth import BankingAuth
-from .dto import ListKeysDTOResponse, ReadKeysResponseDTO
+from ..dto import ListKeysDTOResponse, ReadKeysResponseDTO
 
 
 class BankingClient:
-    def __init__(self, log=None):
+    def __init__(self, log=None, cache_service=None):
         self.logger = log or logger
-        self.auth = BankingAuth(log=self.logger)
+        self.auth = BankingAuth(log=self.logger, cache_service=cache_service)
         self.base_url = settings.BANKING_BASE_URL
         self.default_headers = {
             "Content-Type": "application/json",
@@ -46,9 +46,7 @@ class BankingClient:
         self.logger.info(f"Active Pix Keys for Fin Account {fin_account_id}: {body}")
         return ListKeysDTOResponse(**body)
 
-    async def read_pix_key(
-        self, pix_key: str, fin_account_id: str
-    ) -> ReadKeysResponseDTO:
+    async def read_pix_key(self, pix_key: str, fin_account_id: str) -> ReadKeysResponseDTO:
         path = f"/api/v1/pix/{fin_account_id}/key/{quote(pix_key, safe='')}"
         url = self.__url(path)
         headers = await self.build_headers()
@@ -56,7 +54,5 @@ class BankingClient:
         self.logger.debug(f"Read Pix Key status Code: {response.status_code}")
         response.raise_for_status()
         body = response.json()
-        self.logger.info(
-            f"Read Pix Key response for key {pix_key} - e2e: {body.get('endToEndId')}"
-        )
+        self.logger.info(f"Read Pix Key response for key {pix_key} - e2e: {body.get('endToEndId')}")
         return ReadKeysResponseDTO(**body)

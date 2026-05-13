@@ -1,6 +1,6 @@
 from langgraph.graph import END, START, StateGraph
 
-from ..infrastructure.banking_client import BankingClient
+from ..infrastructure.banking.banking_client import BankingClient
 from ..infrastructure.llm_service import LLMService
 from .nodes.chat_response_node import create_chat_response_node
 from .nodes.fallback_node import fallback_node
