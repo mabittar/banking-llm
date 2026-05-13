@@ -1,4 +1,4 @@
-from ...infrastructure.banking_client import BankingClient
+from ...infrastructure.banking.banking_client import BankingClient
 from ..state import GraphState
 
 

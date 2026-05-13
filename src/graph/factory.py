@@ -1,5 +1,5 @@
 from ..core.logger import logger
-from ..infrastructure.banking_client import BankingClient
+from ..infrastructure.banking.banking_client import BankingClient
 from ..infrastructure.llm_service import LLMService
 from . import nodes  # noqa: F401
 from .graph import build_graph

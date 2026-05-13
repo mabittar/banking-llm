@@ -6,16 +6,17 @@ import jwt
 import pytz
 import requests
 
-from ..core.config import settings
-from ..core.logger import logger
+from ...core.config import settings
+from ...core.logger import logger
 
 tz = pytz.timezone("America/Sao_Paulo")
 now = datetime.now(tz=tz)
 
 
 class BankingAuth:
-    def __init__(self, log=None):
+    def __init__(self, log=None, cache_service=None):
         self.logger = log or logger
+        self.cache_service = cache_service
         self.host = settings.BANKING_BASE_URL
         self.default_headers = {
             "Content-Type": "application/json",
@@ -56,14 +57,25 @@ class BankingAuth:
             response.raise_for_status()
             json_body = response.json()
             self.token = json_body.get("accessToken")
-            self.token_expiration_time = time.time() + json_body.get("expiresIn", 3600)
+            expires_in = json_body.get("expiresIn", 3600)
+            self.token_expiration_time = time.time() + expires_in
+
+            if self.cache_service:
+                await self.cache_service.set("banking:access_token", self.token, ttl=expires_in)
         except Exception as e:
             self.logger.error(f"An error occurred: {e}")
             raise e
 
     async def get_valid_token(self, retries=0):
+        if self.cache_service:
+            cached = await self.cache_service.get("banking:access_token")
+            if cached:
+                self.token = cached
+                return self.token
+
         if self.token and time.time() < self.token_expiration_time:
             return self.token
+
         self.logger.debug("Token expired or not available, acquiring a new one...")
         try:
             await self.login()
