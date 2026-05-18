@@ -20,6 +20,7 @@ keywords = [
 dependencies = [
     "cryptography>=46.0.4",
     "langchain>=0.3.0",
+    "langgraph-checkpoint-postgres>=2.0.0",
     "langchain-ollama>=0.3.0",
     "langchain-openai>=0.3.0",
     "langgraph>=1.1.1",
@@ -30,6 +31,7 @@ dependencies = [
     "uvicorn[standard]>=0.34.0",
     "pydantic>=2.0.0",
     "pydantic-settings>=2.0.0",
+    "psycopg[binary,pool]>=3.3.4",
     "pytz>=2026.2",
     "structlog>=25.5.0",
 ]
