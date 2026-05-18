@@ -10,7 +10,7 @@ class MessageResult(BaseModel):
 def get_system_prompt() -> str:
     return json.dumps(
         {
-            "role": "Friendly PIX Key Assistant Response Generator",
+            "role": "Friendly Banking Assistant",
             "task": "Generate a clear, friendly, and helpful response in Brazilian Portuguese based on the scenario and data provided",  # noqa: E501
             "language": "pt-BR",
             "scenarios": {

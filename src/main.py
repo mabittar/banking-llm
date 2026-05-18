@@ -1,34 +1,39 @@
-"""
-FastAPI application – exposes the LangChain chain as an HTTP endpoint.
-"""
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-
-from src.core.config import BaseSettings, settings
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
 from .chat.router import chat_router
 from .core.cache import CacheProtocol
+from .core.config import BaseSettings, settings
 from .core.health_check import health_router
+from .core.logger import logger
 from .core.middleware import LoggingMiddleware
 from .infrastructure.cache.cache_service import RedisCacheService
 
 
-class App:
-    """Main application class."""
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with AsyncPostgresSaver.from_conn_string(settings.DATABASE_URL) as checkpointer:
+        await checkpointer.setup()
+        app.state.checkpointer = checkpointer
+        logger.info("Checkpointer setup complete", db=settings.DBNAME)
+        yield
+        logger.info("Checkpointer connection closed")
 
-    def __init__(self, settings: BaseSettings, cache: CacheProtocol | None = None):
+
+class App:
+    def __init__(self, settings: BaseSettings, cache: CacheProtocol | None = None, lifespan=None):
         self.settings = settings
-        self.__app = FastAPI(**settings.set_app_attributes)
+        self.__app = FastAPI(**settings.set_app_attributes, lifespan=lifespan)
         self.__app.state.cache = cache
         self.__setup_middleware()
         self.__add_routes()
 
     def __setup_middleware(self):
-        # ── Middleware ─────────────────────────────────────────────────────
         self.__app.add_middleware(LoggingMiddleware)
 
     def __add_routes(self):
-        # ── Routes ───────────────────────────────────────────────────────────
         self.__app.include_router(router=health_router)
         self.__app.include_router(router=chat_router)
 
@@ -38,7 +43,7 @@ class App:
 
 def initialize_application() -> FastAPI:
     cache = RedisCacheService()
-    return App(settings=settings, cache=cache)()
+    return App(settings=settings, cache=cache, lifespan=lifespan)()
 
 
 app = initialize_application()
