@@ -1,7 +1,8 @@
 from langgraph.graph import END, START, StateGraph
 
-from ..infrastructure.banking.banking_client import BankingClient
-from ..infrastructure.llm_service import LLMService
+from ..services.intent_service import IntentService
+from ..services.pix_key_service import PixKeyService
+from ..services.response_service import ResponseService
 from .nodes.chat_response_node import create_chat_response_node
 from .nodes.fallback_node import fallback_node
 from .nodes.identify_intent import create_identify_intent_node
@@ -19,14 +20,19 @@ def route_intent(state: GraphState) -> str:
     return "fallback"
 
 
-def build_graph(llm_service: LLMService, banking_client: BankingClient, logger):
+def build_graph(
+    intent_service: IntentService,
+    pix_key_service: PixKeyService,
+    response_service: ResponseService,
+    logger,
+):
     workflow = StateGraph(GraphState)
 
-    workflow.add_node("identifyIntent", create_identify_intent_node(llm_service))
-    workflow.add_node("listKeys", create_list_keys_node(logger, banking_client))
-    workflow.add_node("readKey", create_read_key_node(logger, banking_client))
+    workflow.add_node("identifyIntent", create_identify_intent_node(intent_service))
+    workflow.add_node("listKeys", create_list_keys_node(pix_key_service))
+    workflow.add_node("readKey", create_read_key_node(pix_key_service))
     workflow.add_node("fallback", fallback_node)
-    workflow.add_node("chatResponse", create_chat_response_node(llm_service))
+    workflow.add_node("chatResponse", create_chat_response_node(response_service))
 
     workflow.add_edge(START, "identifyIntent")
 
