@@ -1,28 +1,11 @@
-from ...infrastructure.banking.banking_client import BankingClient
+from ...core.logger import logger
+from ...services.pix_key_service import PixKeyService
 from ..state import GraphState
 
 
-def create_list_keys_node(logger, banking_client: BankingClient):
+def create_list_keys_node(pix_key_service: PixKeyService):
     async def list_keys_node(state: GraphState) -> dict:
         logger.info("List keys node")
-        fin_account_id = state.get("fin_account_id")
-        try:
-            if not fin_account_id:
-                return {
-                    "action_success": False,
-                    "action_error": "fin_account_id is required",
-                }
-
-            result = await banking_client.list_active_pix_keys(fin_account_id)
-            return {
-                "action_success": True,
-                "action_data": result.model_dump(),
-            }
-        except Exception as error:
-            logger.error("Error listing PIX keys", exc_info=True)
-            return {
-                "action_success": False,
-                "action_error": str(error),
-            }
+        return await pix_key_service.list_keys(state.get("fin_account_id"))
 
     return list_keys_node
