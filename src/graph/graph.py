@@ -25,6 +25,7 @@ def build_graph(
     pix_key_service: PixKeyService,
     response_service: ResponseService,
     logger,
+    checkpointer=None,
 ):
     workflow = StateGraph(GraphState)
 
@@ -51,4 +52,4 @@ def build_graph(
     workflow.add_edge("fallback", "chatResponse")
     workflow.add_edge("chatResponse", END)
 
-    return workflow.compile()
+    return workflow.compile(checkpointer=checkpointer)
