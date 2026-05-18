@@ -60,6 +60,13 @@ class BaseSettings(PydanticBaseSettings):
     REDIS_PORT: int = Field(6379, description="Redis port.")
     REDIS_PASSWORD: str | None = Field(None, description="Redis password. Use null for no auth.")
 
+    # Database
+    DBNAME: str = Field("banking-llm", description="PostgreSQL database name.")
+    DB_USER: str = Field("postgres", description="PostgreSQL user.")
+    DB_PASSWORD: str = Field("mysecretpassword", description="PostgreSQL password.")
+    DB_HOST: str = Field("localhost", description="PostgreSQL host.")
+    DB_PORT: int = Field(5432, description="PostgreSQL port.")
+
     @field_validator("REDIS_PASSWORD", mode="before")
     @classmethod
     def _parse_redis_password(cls, v: str | None) -> str | None:
@@ -74,6 +81,10 @@ class BaseSettings(PydanticBaseSettings):
             "debug": self.IS_DEBUG,
             "description": self.DESCRIPTION,
         }
+
+    @property
+    def DATABASE_URL(self) -> str:
+        return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DBNAME}?sslmode=disable"
 
 
 class AppDevelopmentSettings(BaseSettings):
