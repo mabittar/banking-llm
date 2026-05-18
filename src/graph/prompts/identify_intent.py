@@ -73,7 +73,7 @@ def get_system_prompt() -> str:
                     },
                 },
                 {
-                    "input": "Quero ver os detalhes da chave pix email@test.com na conta 550e8400-e29b-41d4-a716-446655440000",# noqa: E501
+                    "input": "Quero ver os detalhes da chave pix email@test.com na conta 550e8400-e29b-41d4-a716-446655440000",  # noqa: E501
                     "output": {
                         "intent": "read_key",
                         "fin_account_id": "550e8400-e29b-41d4-a716-446655440000",
@@ -107,7 +107,7 @@ def get_system_prompt() -> str:
             ],
             "important_rules": [
                 "If the user asks about PIX keys but does NOT provide a fin_account_id, set intent to 'unknown'.",
-                "If the user asks to read a specific key but does NOT provide the pix_key value, set intent to 'unknown'.",# noqa: E501
+                "If the user asks to read a specific key but does NOT provide the pix_key value, set intent to 'unknown'.",  # noqa: E501
                 "Always extract values exactly as the user provides them, without modification.",
             ],
         },

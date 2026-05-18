@@ -21,7 +21,7 @@ Desenvolver um assistente conversacional baseado em LLM para operações Pix, in
 | Language/Version     | Python 3.12+                                                         |
 | Primary Dependencies | LangChain, LangGraph, FastAPI, Pydantic v2                           |
 | LLM Providers        | OpenRouter (Gemini 2.5 Flash) / Ollama (local dev)                   |
-| Storage              | —                                                                    |
+| Storage              | PostgreSQL (LangGraph checkpointer persistence)                      |
 | Cache                | Redis 5+ (redis-py async com hiredis)                                |
 | Broker               | —                                                                    |
 | Testing              | pytest + pytest-asyncio + pytest-cov                                 |
@@ -75,6 +75,7 @@ Desenvolver um assistente conversacional baseado em LLM para operações Pix, in
 - [LangGraph](https://langchain-ai.github.io/langgraph/) — Orquestração de agentes como grafos de estado
 - [FastAPI](https://fastapi.tiangolo.com/) — Framework web async de alta performance
 - [Redis](https://redis.io/) — Cache de tokens e dados intermediários
+- [PostgreSQL](https://www.postgresql.org/) — Banco de dados para persistência do LangGraph (checkpointer)
 - [Pydantic v2](https://docs.pydantic.dev/) — Validação e serialização de dados
 
 ## Getting Started
@@ -83,6 +84,7 @@ Desenvolver um assistente conversacional baseado em LLM para operações Pix, in
 
 - Python 3.12+
 - Redis server (local ou remoto)
+- PostgreSQL server (local ou remoto)
 - Ollama (para desenvolvimento local) ou API key OpenRouter
 
 ### Installation
@@ -123,6 +125,11 @@ Desenvolver um assistente conversacional baseado em LLM para operações Pix, in
 | `OLLAMA_MODEL`       | Modelo Ollama                     | `qwen3.5:latest`               |
 | `REDIS_HOST`         | Host do Redis                     | `localhost`                    |
 | `REDIS_PORT`         | Porta do Redis                    | `6379`                         |
+| `POSTGRES_DB`        | Nome do banco de dados PostgreSQL | `banking-llm`                  |
+| `POSTGRES_USER`      | Usuário do banco PostgreSQL       | `postgres`                     |
+| `POSTGRES_PASSWORD`  | Senha do banco PostgreSQL         | `postgres`                     |
+| `POSTGRES_HOST`      | Host do banco PostgreSQL          | `localhost`                    |
+| `POSTGRES_PORT`      | Porta do banco PostgreSQL         | `5432`                         |
 | `CLIENT_ID`          | Client ID para API bancária       | —                              |
 | `JWT_SECRET`         | Secret para autenticação bancária | —                              |
 | `BANKING_BASE_URL`   | URL base da API bancária          | `https://banking.example.com` |

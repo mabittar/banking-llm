@@ -1,11 +1,11 @@
+from uuid import uuid4
+
 from fastapi import APIRouter, Request
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel, Field
 
 from ..core.logger import logger
 from ..graph.factory import GraphProcessor
-from ..infrastructure.banking.banking_client import BankingClient
-from ..infrastructure.llm_service import LLMService
 
 chat_router = APIRouter(tags=["Chat"])
 
@@ -19,6 +19,10 @@ class ChatRequest(BaseModel):
         min_length=1,
         examples=["Quais são as chaves pix ativas da conta 550e8400?"],
         description="The user's question to send to the LLM.",
+    )
+    thread_id: str | None = Field(
+        None,
+        description="Optional thread ID for multi-turn conversations. Omit for a one-shot conversation.",
     )
 
 
@@ -41,14 +45,18 @@ class ErrorResponse(BaseModel):
 async def chat(request: ChatRequest, raw_request: Request):
     try:
         cache = getattr(raw_request.app.state, "cache", None)
-        llm_service = LLMService(logger)
-        banking_client = BankingClient(logger, cache_service=cache)
-        graph_processor = GraphProcessor(llm_service, banking_client, logger)
+        checkpointer = getattr(raw_request.app.state, "checkpointer", None)
+        thread_id = request.thread_id or str(uuid4())
+        graph_processor = GraphProcessor(log=logger, cache_service=cache, checkpointer=checkpointer)
         graph = graph_processor.get_graph()
-        result = await graph.ainvoke({"messages": [HumanMessage(content=request.question)]})
+        config = {"configurable": {"thread_id": thread_id}}
+        result = await graph.ainvoke(
+            {"messages": [HumanMessage(content=request.question)]},
+            config,
+        )
         messages = result.get("messages", [])
         last_ai_message = messages[-1].content if messages else "Sem resposta."
         return ChatResponse(answer=last_ai_message)
     except Exception:
-        logger.error("Error calling LLM", exc_info=True)
+        logger.error("Error processing chat", exc_info=True)
         return ErrorResponse(error="Something went wrong. Please try again later.")

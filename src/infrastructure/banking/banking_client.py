@@ -2,8 +2,8 @@ from urllib.parse import quote
 
 from ...core.config import settings
 from ...core.logger import logger
-from .banking_auth import BankingAuth
 from ..dto import ListKeysDTOResponse, ReadKeysResponseDTO
+from .banking_auth import BankingAuth
 
 
 class BankingClient:
