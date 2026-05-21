@@ -24,7 +24,6 @@ class ResponseService:
                 scenario = f"{command}_error"
 
             context = {
-                "fin_account_id": state.get("fin_account_id"),
                 "pix_key": state.get("pix_key"),
                 "action_data": action_data,
                 "action_error": action_error,

@@ -54,6 +54,8 @@ class BaseSettings(PydanticBaseSettings):
     REALM_NAME: str = Field("", description="Realm name for banking.")
     JWT_SECRET: str = Field("", description="JWT secret for banking.")
     BANKING_BASE_URL: str = Field("https://banking.example.com", description="Base URL for banking API.")
+    FIN_ACCOUNT_ID: str = Field("", description="Primary financial account ID for PIX operations.")
+    FIN_ACCOUNT_ID_FALLBACK: str = Field("", description="Fallback financial account ID for retry on failure.")
 
     # Cache
     REDIS_HOST: str = Field("localhost", description="Redis host.")
