@@ -8,7 +8,6 @@ class GraphState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
     output: str
     command: Literal["list_keys", "read_key", "unknown"]
-    fin_account_id: str | None
     pix_key: str | None
     action_success: bool | None
     action_error: str | None
