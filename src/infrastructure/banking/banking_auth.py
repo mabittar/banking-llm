@@ -47,7 +47,9 @@ class BankingAuth:
             "sub": self.client_id,
             "jti": str(uuid4()),
         }
-        jwt_signed = jwt.encode(jwt_signed_data, self.jwt_secret, algorithm=header.get("alg"))
+        jwt_signed = jwt.encode(
+            jwt_signed_data, self.jwt_secret, algorithm=header.get("alg")
+        )
         try:
             path = "/api/v1/auth/token"
             url = self.__url(path)
@@ -61,7 +63,9 @@ class BankingAuth:
             self.token_expiration_time = time.time() + expires_in
 
             if self.cache_service:
-                await self.cache_service.set("banking:access_token", self.token, ttl=expires_in)
+                await self.cache_service.set(
+                    "banking:access_token", self.token, ttl=expires_in
+                )
         except Exception as e:
             self.logger.error(f"An error occurred: {e}")
             raise e
@@ -86,4 +90,6 @@ class BankingAuth:
                 self.logger.debug(f"Retrying to acquire token... Attempt {retries + 1}")
                 return await self.get_valid_token(retries + 1)
             else:
-                raise Exception("Failed to acquire token after multiple attempts.") from e
+                raise Exception(
+                    "Failed to acquire token after multiple attempts."
+                ) from e

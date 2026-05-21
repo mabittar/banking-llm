@@ -14,7 +14,9 @@ from .infrastructure.cache.cache_service import RedisCacheService
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with AsyncPostgresSaver.from_conn_string(settings.DATABASE_URL) as checkpointer:
+    async with AsyncPostgresSaver.from_conn_string(
+        settings.DATABASE_URL
+    ) as checkpointer:
         await checkpointer.setup()
         app.state.checkpointer = checkpointer
         logger.info("Checkpointer setup complete", db=settings.DBNAME)
@@ -23,7 +25,9 @@ async def lifespan(app: FastAPI):
 
 
 class App:
-    def __init__(self, settings: BaseSettings, cache: CacheProtocol | None = None, lifespan=None):
+    def __init__(
+        self, settings: BaseSettings, cache: CacheProtocol | None = None, lifespan=None
+    ):
         self.settings = settings
         self.__app = FastAPI(**settings.set_app_attributes, lifespan=lifespan)
         self.__app.state.cache = cache

@@ -1,7 +1,10 @@
+from typing import TYPE_CHECKING
+
 from fastapi import APIRouter, Request, status
 from fastapi.responses import JSONResponse
 
-from .cache import CacheProtocol
+if TYPE_CHECKING:
+    from .cache import CacheProtocol
 
 health_router = APIRouter(tags=["Health Checker"])
 
