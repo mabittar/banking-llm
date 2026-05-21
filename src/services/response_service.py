@@ -20,12 +20,7 @@ class ResponseService:
             action_data = state.get("action_data")
             action_error = state.get("action_error")
 
-            if command == "unknown":
-                scenario = "unknown"
-            elif action_success:
-                scenario = f"{command}_success"
-            else:
-                scenario = f"{command}_error"
+            scenario = self._resolve_scenario(command, action_success, state)
 
             context = {
                 "pix_key": state.get("pix_key"),
@@ -43,3 +38,23 @@ class ResponseService:
         except Exception:
             fallback = "Desculpe, ocorreu um erro ao processar sua solicitação. Tente novamente."
             return {"messages": [AIMessage(content=fallback)]}
+
+    def _resolve_scenario(self, command: str, action_success: bool | None, state: GraphState) -> str:
+        if command == "unknown":
+            return "unknown"
+
+        if command == "brcode_ambiguous":
+            return "brcode_ambiguous_success"
+
+        if command == "pix_payment":
+            if state.get("awaiting_amount"):
+                return "pix_payment_awaiting"
+            if state.get("brcode_status") in ("PAID", "EXPIRED"):
+                return "pix_payment_blocked"
+            if action_success:
+                return "pix_payment_success"
+            return "pix_payment_error"
+
+        if action_success:
+            return f"{command}_success"
+        return f"{command}_error"

@@ -22,9 +22,7 @@ class IntentService:
 
             system_prompt = get_system_prompt()
             user_prompt = get_user_prompt(input_text)
-            result: IntentResult = await self._llm_service.generate_structured(
-                system_prompt, user_prompt, IntentResult
-            )
+            result: IntentResult = await self._llm_service.generate_structured(system_prompt, user_prompt, IntentResult)
 
             state_update = {
                 "command": result.intent,
@@ -36,6 +34,17 @@ class IntentService:
                     state_update["withdraw_amount"] = result.amount
                 if result.pix_key:
                     state_update["withdraw_init_type"] = "DICT"
+
+            if result.intent == "brcode_preview":
+                state_update["brcode"] = result.brcode
+
+            if result.intent == "pix_payment":
+                state_update["brcode"] = result.brcode
+                if result.amount is not None:
+                    state_update["withdraw_amount"] = result.amount
+
+            if result.intent == "brcode_ambiguous":
+                state_update["brcode"] = result.brcode
 
             logger.info("Intent classified", **state_update)
             return state_update

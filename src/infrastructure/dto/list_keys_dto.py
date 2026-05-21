@@ -1,18 +1,19 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
 
 
 class PixKeyItem(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
     uuid: str
-    created_at: datetime = Field(alias="createdAt")
-    updated_at: datetime = Field(alias="updatedAt")
+    created_at: datetime
+    updated_at: datetime
     key: str
     type: str
     status: str
-    last_usage: datetime | None = Field(None, alias="lastUsage")
+    last_usage: datetime | None = None
 
 
 class ListKeysDTOResponse(BaseModel):
