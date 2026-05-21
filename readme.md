@@ -23,7 +23,6 @@ Desenvolver um assistente conversacional baseado em LLM para operações Pix, in
 | LLM Providers        | OpenRouter (Gemini 2.5 Flash) / Ollama (local dev)                   |
 | Storage              | PostgreSQL (LangGraph checkpointer persistence)                      |
 | Cache                | Redis 5+ (redis-py async com hiredis)                                |
-| Broker               | —                                                                    |
 | Testing              | pytest + pytest-asyncio + pytest-cov                                 |
 | Linting              | Ruff (lint + isort) + Black (formatting)                             |
 | Target Platform      | LangGraph Cloud / Uvicorn standalone                                 |
@@ -196,7 +195,8 @@ src/
 
 ## Roadmap
 
-- [ ] Adicionar mais operações Pix (criação, exclusão de chaves)
+- [ ] Adicionar mais operações Pix
+- [ ] Adicionar camada para prevenção de injeções maliciosas
 - [ ] Implementar histórico de conversas persistente
 - [ ] Adicionar autenticação no endpoint /chat
 - [ ] Dockerfile para deploy containerizado
