@@ -1,6 +1,10 @@
 from langchain_core.messages import AIMessage
 
-from ..graph.prompts.chat_response import MessageResult, get_system_prompt, get_user_prompt
+from ..graph.prompts.chat_response import (
+    MessageResult,
+    get_system_prompt,
+    get_user_prompt,
+)
 from ..graph.state import GraphState
 from ..infrastructure.llm_service import LLMService
 

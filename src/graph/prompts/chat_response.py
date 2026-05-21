@@ -30,6 +30,14 @@ def get_system_prompt() -> str:
                     "description": "Failed to retrieve PIX key details",
                     "instructions": "Apologize and explain that there was an error retrieving the key details. Suggest trying again.",  # noqa: E501
                 },
+                "pix_withdraw_success": {
+                    "description": "Successfully executed a PIX transfer/withdrawal",
+                    "instructions": "Inform the user that the transfer was successful. Present: transaction End To End (endToEndId), amount transferred, beneficiary name, and current status. Be celebratory but concise.",  # noqa: E501
+                },
+                "pix_withdraw_error": {
+                    "description": "Failed to execute a PIX transfer/withdrawal",
+                    "instructions": "Apologize and explain that the transfer could not be completed. If the error is about validation (missing data, invalid amount), explain what's needed. Never expose internal error details or stack traces. Suggest the user verify the data and try again.",  # noqa: E501
+                },
                 "unknown": {
                     "description": "User asked something unrelated to PIX keys or missing required information",
                     "instructions": "Politely explain what you can do: (1) list active PIX keys for an account (requires account ID), (2) read details of a specific PIX key (requires account ID and PIX key value). Ask the user to provide the needed information.",  # noqa: E501

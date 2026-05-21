@@ -30,10 +30,16 @@ def _state(**overrides) -> GraphState:
 
 @pytest.mark.asyncio
 async def test_generate_list_keys_success(mock_llm_service):
-    mock_llm_service.generate_structured.return_value = MessageResult(message="Aqui estão suas chaves PIX ativas.")
+    mock_llm_service.generate_structured.return_value = MessageResult(
+        message="Aqui estão suas chaves PIX ativas."
+    )
     service = ResponseService(mock_llm_service)
 
-    state = _state(command="list_keys", action_success=True, action_data={"count": 2, "results": []})
+    state = _state(
+        command="list_keys",
+        action_success=True,
+        action_data={"count": 2, "results": []},
+    )
     result = await service.generate(state)
 
     assert len(result["messages"]) == 1
@@ -47,7 +53,9 @@ async def test_generate_list_keys_error(mock_llm_service):
     )
     service = ResponseService(mock_llm_service)
 
-    state = _state(command="list_keys", action_success=False, action_error="API failure")
+    state = _state(
+        command="list_keys", action_success=False, action_error="API failure"
+    )
     result = await service.generate(state)
 
     assert len(result["messages"]) == 1
@@ -56,7 +64,9 @@ async def test_generate_list_keys_error(mock_llm_service):
 
 @pytest.mark.asyncio
 async def test_generate_read_key_success(mock_llm_service):
-    mock_llm_service.generate_structured.return_value = MessageResult(message="Detalhes da chave PIX: email@test.com")
+    mock_llm_service.generate_structured.return_value = MessageResult(
+        message="Detalhes da chave PIX: email@test.com"
+    )
     service = ResponseService(mock_llm_service)
 
     state = _state(command="read_key", action_success=True, pix_key="email@test.com")

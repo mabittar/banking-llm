@@ -17,7 +17,9 @@ def mock_settings():
 
 @pytest.fixture
 def mock_jwt_encode():
-    with patch("src.infrastructure.banking.banking_auth.jwt.encode", return_value="signed-jwt") as mock:
+    with patch(
+        "src.infrastructure.banking.banking_auth.jwt.encode", return_value="signed-jwt"
+    ) as mock:
         yield mock
 
 
@@ -34,7 +36,9 @@ def mock_response():
 
 
 @pytest.mark.asyncio
-async def test_login_persists_token_in_cache(fake_cache: FakeCache, mock_settings, mock_jwt_encode, mock_response):
+async def test_login_persists_token_in_cache(
+    fake_cache: FakeCache, mock_settings, mock_jwt_encode, mock_response
+):
     from src.infrastructure.banking.banking_auth import BankingAuth
 
     auth = BankingAuth(cache_service=fake_cache)
@@ -78,7 +82,9 @@ async def test_get_valid_token_falls_back_to_login_when_cache_empty(
 
 
 @pytest.mark.asyncio
-async def test_get_valid_token_works_without_cache(mock_settings, mock_jwt_encode, mock_response):
+async def test_get_valid_token_works_without_cache(
+    mock_settings, mock_jwt_encode, mock_response
+):
     from src.infrastructure.banking.banking_auth import BankingAuth
 
     auth = BankingAuth(cache_service=None)
