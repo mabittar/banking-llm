@@ -12,12 +12,16 @@ class PixKeyService:
         self._banking_client = banking_client
 
     async def list_keys(self) -> dict:
-        return await self._execute_with_fallback(self._banking_client.list_active_pix_keys)
+        return await self._execute_with_fallback(
+            self._banking_client.list_active_pix_keys
+        )
 
     async def read_key(self, pix_key: str | None) -> dict:
         if not pix_key:
             return {"action_success": False, "action_error": "pix_key is required"}
-        return await self._execute_with_fallback(self._banking_client.read_pix_key, pix_key)
+        return await self._execute_with_fallback(
+            self._banking_client.read_pix_key, pix_key
+        )
 
     async def _execute_with_fallback(self, operation, *args) -> dict:
         fin_account_id = settings.FIN_ACCOUNT_ID
@@ -37,7 +41,9 @@ class PixKeyService:
                     error=str(primary_error),
                 )
                 try:
-                    result = await self._call_operation(operation, settings.FIN_ACCOUNT_ID_FALLBACK, *args)
+                    result = await self._call_operation(
+                        operation, settings.FIN_ACCOUNT_ID_FALLBACK, *args
+                    )
                     return {"action_success": True, "action_data": result.model_dump()}
                 except Exception as fallback_error:
                     return {

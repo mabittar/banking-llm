@@ -53,14 +53,25 @@ class BaseSettings(PydanticBaseSettings):
     CLIENT_ID: str = Field("", description="Client ID for banking.")
     REALM_NAME: str = Field("", description="Realm name for banking.")
     JWT_SECRET: str = Field("", description="JWT secret for banking.")
-    BANKING_BASE_URL: str = Field("https://banking.kanastra.dev", description="Base URL for banking API.")
-    FIN_ACCOUNT_ID: str = Field("", description="Primary financial account ID for PIX operations.")
-    FIN_ACCOUNT_ID_FALLBACK: str = Field("", description="Fallback financial account ID for retry on failure.")
+    BANKING_BASE_URL: str = Field(
+        "https://banking.kanastra.dev", description="Base URL for banking API."
+    )
+    FIN_ACCOUNT_ID: str = Field(
+        "", description="Primary financial account ID for PIX operations."
+    )
+    FIN_ACCOUNT_ID_FALLBACK: str = Field(
+        "", description="Fallback financial account ID for retry on failure."
+    )
+    TRANSACTION_HASH_SECRET: str = Field(
+        "", description="Secret key for HMAC-SHA256 Transaction-Hash-Key generation."
+    )
 
     # Cache
     REDIS_HOST: str = Field("localhost", description="Redis host.")
     REDIS_PORT: int = Field(6379, description="Redis port.")
-    REDIS_PASSWORD: str | None = Field(None, description="Redis password. Use null for no auth.")
+    REDIS_PASSWORD: str | None = Field(
+        None, description="Redis password. Use null for no auth."
+    )
 
     # Database
     DBNAME: str = Field("banking-llm", description="PostgreSQL database name.")
