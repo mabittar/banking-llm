@@ -1,54 +1,55 @@
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
 
 
 class BeneficiaryRequestDTO(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
-    holder_name: str = Field(..., alias="holderName")
-    government_id: str = Field(..., alias="governmentId")
-    code: str = Field(..., alias="code")
-    agency: str = Field(..., alias="agency")
-    account: str = Field(..., alias="account")
-    digit: str = Field(..., alias="digit")
-    account_type: str = Field("checking", alias="accountType")
-    pix_key: str | None = Field(None, alias="pixKey")
-    financial_account: str | None = Field(None, alias="financialAccount")
+    holder_name: str
+    government_id: str
+    code: str
+    agency: str
+    account: str
+    digit: str
+    account_type: str = "checking"
+    pix_key: str | None = None
+    financial_account: str | None = None
 
 
 class PixWithdrawRequestDTO(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
     beneficiary: BeneficiaryRequestDTO
     amount: Decimal
-    init_type: str = Field(..., alias="initType")
-    end_to_end_id: str | None = Field(None, alias="endToEndId")
-    additional_info: str | None = Field(None, alias="additionalInfo")
-    qr_code: str | None = Field(None, alias="qrCode")
-    reconciliation_id: str | None = Field(None, alias="reconciliationId")
-    key_id: str | None = Field(None, alias="keyId")
-    amount_type: str | None = Field(None, alias="amountType")
-    nominal_amount: Decimal | None = Field(None, alias="nominalAmount")
-    discount_amount: Decimal | None = Field(None, alias="discountAmount")
-    fine_amount: Decimal | None = Field(None, alias="fineAmount")
-    interest_amount: Decimal | None = Field(None, alias="interestAmount")
-    reduction_amount: Decimal | None = Field(None, alias="reductionAmount")
-    receiver_account: str | None = Field(None, alias="receiverAccount")
-    receiver_account_type: str | None = Field(None, alias="receiverAccountType")
-    receiver_branch: str | None = Field(None, alias="receiverBranch")
-    receiver_name: str | None = Field(None, alias="receiverName")
-    receiver_government_id: str | None = Field(None, alias="receiverGovernmentId")
-    financial_account: str | None = Field(None, alias="financialAccount")
-    status: str | None = Field(None, alias="status")
+    init_type: str
+    end_to_end_id: str | None = None
+    additional_info: str | None = None
+    qr_code: str | None = None
+    reconciliation_id: str | None = None
+    key_id: str | None = None
+    amount_type: str | None = None
+    nominal_amount: Decimal | None = None
+    discount_amount: Decimal | None = None
+    fine_amount: Decimal | None = None
+    interest_amount: Decimal | None = None
+    reduction_amount: Decimal | None = None
+    receiver_account: str | None = None
+    receiver_account_type: str | None = None
+    receiver_branch: str | None = None
+    receiver_name: str | None = None
+    receiver_government_id: str | None = None
+    financial_account: str | None = None
+    status: str | None = None
 
 
 class PixWithdrawResponseDTO(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
     uuid: str
-    end_to_end_id: str = Field(..., alias="endToEndId")
+    end_to_end_id: str
     amount: Decimal
     status: str
-    transaction_id: str | None = Field(None, alias="transactionId")
-    sent_at: str | None = Field(None, alias="sentAt")
+    transaction_id: str | None = None
+    sent_at: str | None = None

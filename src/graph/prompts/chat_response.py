@@ -38,6 +38,26 @@ def get_system_prompt() -> str:
                     "description": "Failed to execute a PIX transfer/withdrawal",
                     "instructions": "Apologize and explain that the transfer could not be completed. If the error is about validation (missing data, invalid amount), explain what's needed. Never expose internal error details or stack traces. Suggest the user verify the data and try again.",  # noqa: E501
                 },
+                "pix_payment_success": {
+                    "description": "Successfully executed a QR Code payment",
+                    "instructions": "Inform the user that the QR Code payment was successful. Present: transaction End To End (endToEndId), amount paid, beneficiary name, and current status. Be celebratory but concise.",  # noqa: E501
+                },
+                "pix_payment_error": {
+                    "description": "Failed to execute a QR Code payment",
+                    "instructions": "Apologize and explain that the QR Code payment could not be completed. If the error is about validation, explain what's needed. Never expose internal error details.",  # noqa: E501
+                },
+                "pix_payment_awaiting": {
+                    "description": "QR Code has CUSTOM amount type - need to ask user for the value",
+                    "instructions": "Present the beneficiary data from the QR Code (name, masked CPF/CNPJ, institution). Inform that the QR Code does not have a fixed amount. Ask the user: 'Qual valor deseja pagar?' Be clear and friendly.",  # noqa: E501
+                },
+                "pix_payment_blocked": {
+                    "description": "QR Code cannot be paid due to status (PAID or EXPIRED)",
+                    "instructions": "Inform the user about the current QR Code status. Use the exact status provided in the context (PAGO or EXPIRADO). State clearly that payment is not possible. Show beneficiary data for reference only.",  # noqa: E501
+                },
+                "brcode_ambiguous_success": {
+                    "description": "User provided a BRCode but did not specify if they want to consult or pay",
+                    "instructions": "Ask the user: 'Você gostaria de consultar os dados deste QR Code ou realizar o pagamento diretamente?' Be polite and concise.",  # noqa: E501
+                },
                 "unknown": {
                     "description": "User asked something unrelated to PIX keys or missing required information",
                     "instructions": "Politely explain what you can do: (1) list active PIX keys for an account (requires account ID), (2) read details of a specific PIX key (requires account ID and PIX key value). Ask the user to provide the needed information.",  # noqa: E501
