@@ -47,7 +47,9 @@ async def chat(request: ChatRequest, raw_request: Request):
         cache = getattr(raw_request.app.state, "cache", None)
         checkpointer = getattr(raw_request.app.state, "checkpointer", None)
         thread_id = request.thread_id or str(uuid4())
-        graph_processor = GraphProcessor(log=logger, cache_service=cache, checkpointer=checkpointer)
+        graph_processor = GraphProcessor(
+            log=logger, cache_service=cache, checkpointer=checkpointer
+        )
         graph = graph_processor.get_graph()
         config = {"configurable": {"thread_id": thread_id}}
         result = await graph.ainvoke(

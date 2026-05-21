@@ -23,7 +23,9 @@ def _make_http_error(status_code: int) -> HTTPError:
 
 @pytest.mark.asyncio
 @patch("src.services.pix_key_service.settings")
-async def test_list_keys_success_with_primary_account(mock_settings, mock_banking_client):
+async def test_list_keys_success_with_primary_account(
+    mock_settings, mock_banking_client
+):
     mock_settings.FIN_ACCOUNT_ID = "primary-account"
     mock_settings.FIN_ACCOUNT_ID_FALLBACK = "fallback-account"
     mock_banking_client.list_active_pix_keys.return_value = type(
@@ -40,7 +42,9 @@ async def test_list_keys_success_with_primary_account(mock_settings, mock_bankin
 
 @pytest.mark.asyncio
 @patch("src.services.pix_key_service.settings")
-async def test_list_keys_fallback_on_retryable_error(mock_settings, mock_banking_client):
+async def test_list_keys_fallback_on_retryable_error(
+    mock_settings, mock_banking_client
+):
     mock_settings.FIN_ACCOUNT_ID = "primary-account"
     mock_settings.FIN_ACCOUNT_ID_FALLBACK = "fallback-account"
     mock_banking_client.list_active_pix_keys.side_effect = [
@@ -75,10 +79,14 @@ async def test_list_keys_both_accounts_fail(mock_settings, mock_banking_client):
 
 @pytest.mark.asyncio
 @patch("src.services.pix_key_service.settings")
-async def test_list_keys_no_fallback_on_non_retryable_error(mock_settings, mock_banking_client):
+async def test_list_keys_no_fallback_on_non_retryable_error(
+    mock_settings, mock_banking_client
+):
     mock_settings.FIN_ACCOUNT_ID = "primary-account"
     mock_settings.FIN_ACCOUNT_ID_FALLBACK = "fallback-account"
-    mock_banking_client.list_active_pix_keys.side_effect = Exception("Connection timeout")
+    mock_banking_client.list_active_pix_keys.side_effect = Exception(
+        "Connection timeout"
+    )
     service = PixKeyService(mock_banking_client)
 
     result = await service.list_keys()
@@ -104,7 +112,9 @@ async def test_list_keys_fin_account_not_configured(mock_settings, mock_banking_
 
 @pytest.mark.asyncio
 @patch("src.services.pix_key_service.settings")
-async def test_read_key_success_with_primary_account(mock_settings, mock_banking_client):
+async def test_read_key_success_with_primary_account(
+    mock_settings, mock_banking_client
+):
     mock_settings.FIN_ACCOUNT_ID = "primary-account"
     mock_settings.FIN_ACCOUNT_ID_FALLBACK = "fallback-account"
     mock_banking_client.read_pix_key.return_value = type(
@@ -116,7 +126,9 @@ async def test_read_key_success_with_primary_account(mock_settings, mock_banking
 
     assert result["action_success"] is True
     assert result["action_data"]["end_to_end_id"] == "E2E123"
-    mock_banking_client.read_pix_key.assert_awaited_once_with("email@test.com", "primary-account")
+    mock_banking_client.read_pix_key.assert_awaited_once_with(
+        "email@test.com", "primary-account"
+    )
 
 
 @pytest.mark.asyncio
@@ -150,7 +162,9 @@ async def test_read_key_missing_pix_key(mock_banking_client):
 
 @pytest.mark.asyncio
 @patch("src.services.pix_key_service.settings")
-async def test_read_key_no_fallback_without_fallback_configured(mock_settings, mock_banking_client):
+async def test_read_key_no_fallback_without_fallback_configured(
+    mock_settings, mock_banking_client
+):
     mock_settings.FIN_ACCOUNT_ID = "primary-account"
     mock_settings.FIN_ACCOUNT_ID_FALLBACK = ""
     mock_banking_client.read_pix_key.side_effect = _make_http_error(404)

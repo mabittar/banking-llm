@@ -23,7 +23,10 @@ SENSITIVE_KEYS = {
 def mask_sensitive_data(data: Any) -> Any:
     """Recursively mask sensitive keys in a dictionary or list."""
     if isinstance(data, dict):
-        return {k: ("********" if k.lower() in SENSITIVE_KEYS else mask_sensitive_data(v)) for k, v in data.items()}
+        return {
+            k: ("********" if k.lower() in SENSITIVE_KEYS else mask_sensitive_data(v))
+            for k, v in data.items()
+        }
     elif isinstance(data, list):
         return [mask_sensitive_data(item) for item in data]
     return data
@@ -67,9 +70,15 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
         except Exception as e:
             process_time = (time.time() - start_time) * 1000
-            logger.error("EXCEPTION after %.2fms: %s", process_time, str(e), exc_info=True)
+            logger.error(
+                "EXCEPTION after %.2fms: %s", process_time, str(e), exc_info=True
+            )
             return Response(
-                content=json.dumps({"detail": "Erro interno do servidor. A equipe técnica foi notificada."}),
+                content=json.dumps(
+                    {
+                        "detail": "Erro interno do servidor. A equipe técnica foi notificada."
+                    }
+                ),
                 status_code=500,
                 media_type="application/json",
             )

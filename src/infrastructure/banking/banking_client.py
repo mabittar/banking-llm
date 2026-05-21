@@ -1,8 +1,11 @@
+import hashlib
+import hmac
+import json
 from urllib.parse import quote
 
 from ...core.config import settings
 from ...core.logger import logger
-from ..dto import ListKeysDTOResponse, ReadKeysResponseDTO
+from ..dto import ListKeysDTOResponse, PixWithdrawResponseDTO, ReadKeysResponseDTO
 from .banking_auth import BankingAuth
 
 
@@ -46,7 +49,9 @@ class BankingClient:
         self.logger.info(f"Active Pix Keys for Fin Account {fin_account_id}: {body}")
         return ListKeysDTOResponse(**body)
 
-    async def read_pix_key(self, pix_key: str, fin_account_id: str) -> ReadKeysResponseDTO:
+    async def read_pix_key(
+        self, pix_key: str, fin_account_id: str
+    ) -> ReadKeysResponseDTO:
         path = f"/api/v1/pix/{fin_account_id}/key/{quote(pix_key, safe='')}"
         url = self.__url(path)
         headers = await self.build_headers()
@@ -54,5 +59,30 @@ class BankingClient:
         self.logger.debug(f"Read Pix Key status Code: {response.status_code}")
         response.raise_for_status()
         body = response.json()
-        self.logger.info(f"Read Pix Key response for key {pix_key} - e2e: {body.get('endToEndId')}")
+        self.logger.info(
+            f"Read Pix Key response for key {pix_key} - e2e: {body.get('endToEndId')}"
+        )
         return ReadKeysResponseDTO(**body)
+
+    def _generate_transaction_hash(self, payload: dict) -> str:
+        secret = settings.TRANSACTION_HASH_SECRET
+        payload_str = json.dumps(payload) if payload else ""
+        return hmac.new(
+            secret.encode("utf-8"),
+            payload_str.encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
+
+    async def pix_transfer(
+        self, fin_account_id: str, payload: dict
+    ) -> PixWithdrawResponseDTO:
+        path = f"/api/v1/pix/{fin_account_id}/transfer"
+        url = self.__url(path)
+        headers = await self.build_headers()
+        headers["Transaction-Hash-Key"] = self._generate_transaction_hash(payload)
+        response = self.client.post(url, headers=headers, json=payload)
+        self.logger.debug(f"Pix Transfer status Code: {response.status_code}")
+        response.raise_for_status()
+        body = response.json()
+        self.logger.info(f"Pix Transfer completed - uuid: {body.get('uuid')}")
+        return PixWithdrawResponseDTO(**body)
