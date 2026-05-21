@@ -1,6 +1,10 @@
 from langchain_core.messages import AnyMessage
 
-from ..graph.prompts.identify_intent import IntentResult, get_system_prompt, get_user_prompt
+from ..graph.prompts.identify_intent import (
+    IntentResult,
+    get_system_prompt,
+    get_user_prompt,
+)
 from ..infrastructure.llm_service import LLMService
 
 
@@ -17,13 +21,10 @@ class IntentService:
 
             system_prompt = get_system_prompt()
             user_prompt = get_user_prompt(input_text)
-            result: IntentResult = await self._llm_service.generate_structured(
-                system_prompt, user_prompt, IntentResult
-            )
+            result: IntentResult = await self._llm_service.generate_structured(system_prompt, user_prompt, IntentResult)
 
             return {
                 "command": result.intent,
-                "fin_account_id": result.fin_account_id,
                 "pix_key": result.pix_key,
             }
         except Exception as error:
