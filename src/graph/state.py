@@ -8,11 +8,23 @@ from langgraph.graph.message import add_messages
 class GraphState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
     output: str
-    command: Literal["list_keys", "read_key", "pix_withdraw", "unknown"]
+    command: Literal[
+        "list_keys",
+        "read_key",
+        "pix_withdraw",
+        "brcode_preview",
+        "pix_payment",
+        "brcode_ambiguous",
+        "unknown",
+    ]
     pix_key: str | None
+    brcode: str | None
     action_success: bool | None
     action_error: str | None
     action_data: Any | None
+    # Pix Payment fields
+    awaiting_amount: bool | None
+    brcode_status: str | None
     # Pix Withdraw fields
     withdraw_amount: Decimal | None
     withdraw_init_type: str | None
