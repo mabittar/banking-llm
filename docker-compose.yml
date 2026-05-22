@@ -1,26 +1,57 @@
 
 services:
-  pgvector:
+  postgres:
     image: pgvector/pgvector:pg17
     restart: always
-    container_name: pgvector-db
+    container_name: langchain-pix-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: mysecretpassword
-      POSTGRES_DB: vectordb
+      POSTGRES_DB: banking-llm
     ports:
       - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-  cache:
-    image: redis:latest
-    container_name: redis-cache
+  redis:
+    image: redis:7-alpine
+    container_name: langchain-pix-redis
     restart: always
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: langchain-pix-app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      REDIS_HOST: redis
+      DB_HOST: postgres
+      DB_PORT: 5432
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 volumes:
   pgdata:
   redis_data:
