@@ -1,8 +1,19 @@
+from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.checkpoint.memory import MemorySaver
+
+
+@pytest.fixture(autouse=True)
+def disable_guardrail():
+    with patch(
+        "src.services.guardrail_service.GuardrailService.check",
+        new_callable=AsyncMock,
+        return_value={"is_blocked": False},
+    ):
+        yield
 
 
 @pytest.mark.asyncio
@@ -33,9 +44,7 @@ async def test_same_thread_accumulates_messages(fake_checkpointer: MemorySaver):
     )
     second_count = len(second.get("messages", []))
 
-    assert (
-        second_count > first_count
-    ), f"Expected more messages after second invoke ({second_count} > {first_count})"
+    assert second_count > first_count, f"Expected more messages after second invoke ({second_count} > {first_count})"
 
 
 @pytest.mark.asyncio
