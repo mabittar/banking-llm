@@ -17,7 +17,7 @@ class ChatRequest(BaseModel):
     question: str = Field(
         ...,
         min_length=1,
-        examples=["Quais são as chaves pix ativas da conta 550e8400?"],
+        examples=["Quais são as chaves pix ativas da conta?"],
         description="The user's question to send to the LLM.",
     )
     thread_id: str | None = Field(
