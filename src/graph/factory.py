@@ -2,6 +2,7 @@ from ..core.logger import logger
 from ..infrastructure.banking.banking_client import BankingClient
 from ..infrastructure.llm_service import LLMService
 from ..services.brcode_preview_service import BRCodePreviewService
+from ..services.guardrail_service import GuardrailService
 from ..services.intent_service import IntentService
 from ..services.pix_key_service import PixKeyService
 from ..services.pix_payment_service import PixPaymentService
@@ -22,6 +23,7 @@ class GraphProcessor:
         self.brcode_preview_service = BRCodePreviewService(self.banking_client)
         self.pix_payment_service = PixPaymentService(self.brcode_preview_service, self.pix_withdraw_service)
         self.response_service = ResponseService(self.llm_service)
+        self.guardrail_service = GuardrailService()
         self._graph = build_graph(
             self.intent_service,
             self.pix_key_service,
@@ -29,6 +31,7 @@ class GraphProcessor:
             self.brcode_preview_service,
             self.pix_payment_service,
             self.response_service,
+            self.guardrail_service,
             self.logger,
             checkpointer=checkpointer,
         )

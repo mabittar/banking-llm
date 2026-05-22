@@ -36,3 +36,5 @@ class GraphState(TypedDict):
     withdraw_key_id: str | None
     withdraw_amount_type: str | None
     withdraw_nominal_amount: Decimal | None
+    # Guardrail
+    is_blocked: bool | None
