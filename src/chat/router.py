@@ -1,6 +1,8 @@
+from typing import Annotated
 from uuid import uuid4
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Header, Request
+from fastapi.responses import JSONResponse
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel, Field
 
@@ -20,10 +22,6 @@ class ChatRequest(BaseModel):
         examples=["Quais são as chaves pix ativas da conta?"],
         description="The user's question to send to the LLM.",
     )
-    thread_id: str | None = Field(
-        None,
-        description="Optional thread ID for multi-turn conversations. Omit for a one-shot conversation.",
-    )
 
 
 class ChatResponse(BaseModel):
@@ -42,11 +40,20 @@ class ErrorResponse(BaseModel):
 
 
 @chat_router.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest, raw_request: Request):
+async def chat(
+    request: ChatRequest,
+    raw_request: Request,
+    thread_id: Annotated[
+        str | None,
+        Header(
+            description="Optional thread ID for multi-turn conversations. Omit for a one-shot conversation."
+        ),
+    ] = None,
+):
     try:
         cache = getattr(raw_request.app.state, "cache", None)
         checkpointer = getattr(raw_request.app.state, "checkpointer", None)
-        thread_id = request.thread_id or str(uuid4())
+        thread_id = thread_id or str(uuid4())
         graph_processor = GraphProcessor(
             log=logger, cache_service=cache, checkpointer=checkpointer
         )
@@ -57,8 +64,24 @@ async def chat(request: ChatRequest, raw_request: Request):
             config,
         )
         messages = result.get("messages", [])
-        last_ai_message = messages[-1].content if messages else "Sem resposta."
-        return ChatResponse(answer=last_ai_message)
+        response_msg = "Sem Resposta."
+        if messages:
+            ai_messages = [
+                msg for msg in messages if msg.__class__.__name__ == "AIMessage"
+            ]
+            if ai_messages:
+                response_msg = ai_messages[-1].content
+
+        response = JSONResponse(
+            ChatResponse(answer=response_msg).model_dump(),
+            headers={"X-Thread-ID": thread_id},
+        )
+        return response
     except Exception:
         logger.error("Error processing chat", exc_info=True)
-        return ErrorResponse(error="Something went wrong. Please try again later.")
+        return JSONResponse(
+            ErrorResponse(
+                error="Something went wrong. Please try again later."
+            ).model_dump(),
+            status_code=500,
+        )

@@ -8,7 +8,11 @@ def create_pix_payment_node(pix_payment_service: PixPaymentService):
         logger.info(
             "Pix payment node",
             brcode=state.get("brcode", "")[:30] if state.get("brcode") else None,
-            withdraw_amount=str(state.get("withdraw_amount")) if state.get("withdraw_amount") else None,
+            withdraw_amount=(
+                str(state.get("withdraw_amount"))
+                if state.get("withdraw_amount")
+                else None
+            ),
         )
         return await pix_payment_service.execute(state)
 

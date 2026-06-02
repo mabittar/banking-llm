@@ -15,13 +15,17 @@ from .graph import build_graph
 class GraphProcessor:
     def __init__(self, log=None, cache_service=None, checkpointer=None):
         self.logger = log or logger
-        self.banking_client = BankingClient(log=self.logger, cache_service=cache_service)
+        self.banking_client = BankingClient(
+            log=self.logger, cache_service=cache_service
+        )
         self.llm_service = LLMService(log=self.logger)
         self.intent_service = IntentService(self.llm_service)
         self.pix_key_service = PixKeyService(self.banking_client)
         self.pix_withdraw_service = PixWithdrawService(self.banking_client)
         self.brcode_preview_service = BRCodePreviewService(self.banking_client)
-        self.pix_payment_service = PixPaymentService(self.brcode_preview_service, self.pix_withdraw_service)
+        self.pix_payment_service = PixPaymentService(
+            self.brcode_preview_service, self.pix_withdraw_service
+        )
         self.response_service = ResponseService(self.llm_service)
         self.guardrail_service = GuardrailService()
         self._graph = build_graph(

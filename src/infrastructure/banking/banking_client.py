@@ -5,7 +5,12 @@ from urllib.parse import quote
 
 from ...core.config import settings
 from ...core.logger import logger
-from ..dto import BRCodePreviewResponseDTO, ListKeysDTOResponse, PixWithdrawResponseDTO, ReadKeysResponseDTO
+from ..dto import (
+    BRCodePreviewResponseDTO,
+    ListKeysDTOResponse,
+    PixWithdrawResponseDTO,
+    ReadKeysResponseDTO,
+)
 from .banking_auth import BankingAuth
 
 
@@ -49,7 +54,9 @@ class BankingClient:
         self.logger.info(f"Active Pix Keys for Fin Account {fin_account_id}: {body}")
         return ListKeysDTOResponse(**body)
 
-    async def read_pix_key(self, pix_key: str, fin_account_id: str) -> ReadKeysResponseDTO:
+    async def read_pix_key(
+        self, pix_key: str, fin_account_id: str
+    ) -> ReadKeysResponseDTO:
         path = f"/api/v1/pix/{fin_account_id}/key/{quote(pix_key, safe='')}"
         url = self.__url(path)
         headers = await self.build_headers()
@@ -57,10 +64,14 @@ class BankingClient:
         self.logger.debug(f"Read Pix Key status Code: {response.status_code}")
         response.raise_for_status()
         body = response.json()
-        self.logger.info(f"Read Pix Key response for key {pix_key} - e2e: {body.get('endToEndId')}")
+        self.logger.info(
+            f"Read Pix Key response for key {pix_key} - e2e: {body.get('endToEndId')}"
+        )
         return ReadKeysResponseDTO(**body)
 
-    async def brcode_preview(self, fin_account_id: str, brcode: str) -> BRCodePreviewResponseDTO:
+    async def brcode_preview(
+        self, fin_account_id: str, brcode: str
+    ) -> BRCodePreviewResponseDTO:
         path = f"/api/v1/pix/{fin_account_id}/brcode/preview"
         url = self.__url(path)
         headers = await self.build_headers()
@@ -81,7 +92,9 @@ class BankingClient:
             hashlib.sha256,
         ).hexdigest()
 
-    async def pix_transfer(self, fin_account_id: str, payload: dict) -> PixWithdrawResponseDTO:
+    async def pix_transfer(
+        self, fin_account_id: str, payload: dict
+    ) -> PixWithdrawResponseDTO:
         path = f"/api/v1/pix/{fin_account_id}/transfer"
         url = self.__url(path)
         headers = await self.build_headers()

@@ -15,14 +15,20 @@ from ..graph.prompts.guardrail import (
 )
 
 INJECTION_PATTERNS: list[re.Pattern] = [
-    re.compile(r"(?i)(ignore|disregard|forget|bypass).{0,30}(instru[çc]|previous|anterior|system|prompt)"),
-    re.compile(r"(?i)(repita|repeat|show|mostre|print).{0,30}(system prompt|instruções de sistema|instructions)"),
+    re.compile(
+        r"(?i)(ignore|disregard|forget|bypass).{0,30}(instru[çc]|previous|anterior|system|prompt)"
+    ),
+    re.compile(
+        r"(?i)(repita|repeat|show|mostre|print).{0,30}(system prompt|instruções de sistema|instructions)"
+    ),
     re.compile(
         r"(?i)(you are now|act as|pretend|finja|assuma).{0,30}(admin|root|superuser|unrestricted|sem restrição)"
     ),
     re.compile(r"(?i)(privilege|acesso|access).{0,20}(escalat|admin|elevat|temporár)"),
     re.compile(r"(?i)(jailbreak|DAN|do anything now)"),
-    re.compile(r"(?i)vamos jogar.{0,30}(jogo|game).{0,30}(sem restrição|without restriction|unrestricted)"),
+    re.compile(
+        r"(?i)vamos jogar.{0,30}(jogo|game).{0,30}(sem restrição|without restriction|unrestricted)"
+    ),
 ]
 
 
@@ -100,5 +106,7 @@ class GuardrailService:
             )
             return {"is_blocked": True}
 
-        logger.info("guardrail.passed", input_hash=input_id, safeguard_score=result.score)
+        logger.info(
+            "guardrail.passed", input_hash=input_id, safeguard_score=result.score
+        )
         return {"is_blocked": False}
