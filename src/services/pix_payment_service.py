@@ -33,7 +33,9 @@ class PixPaymentService:
         return await self._resolve_amount_and_pay(state, preview_result)
 
     def _is_continuation(self, state: dict) -> bool:
-        return bool(state.get("withdraw_end_to_end_id") and state.get("withdraw_amount"))
+        return bool(
+            state.get("withdraw_end_to_end_id") and state.get("withdraw_amount")
+        )
 
     _UNPAYABLE_STATUSES = {"PAID", "EXPIRED"}
 

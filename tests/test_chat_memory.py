@@ -44,7 +44,9 @@ async def test_same_thread_accumulates_messages(fake_checkpointer: MemorySaver):
     )
     second_count = len(second.get("messages", []))
 
-    assert second_count > first_count, f"Expected more messages after second invoke ({second_count} > {first_count})"
+    assert (
+        second_count > first_count
+    ), f"Expected more messages after second invoke ({second_count} > {first_count})"
 
 
 @pytest.mark.asyncio

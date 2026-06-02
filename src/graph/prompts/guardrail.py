@@ -4,8 +4,12 @@ from pydantic import BaseModel, Field
 
 
 class GuardrailResult(BaseModel):
-    is_unsafe: bool = Field(description="Whether the input is a prompt injection attempt")
-    score: float = Field(description="Confidence score from 0.0 (safe) to 1.0 (malicious)")
+    is_unsafe: bool = Field(
+        description="Whether the input is a prompt injection attempt"
+    )
+    score: float = Field(
+        description="Confidence score from 0.0 (safe) to 1.0 (malicious)"
+    )
     category: str | None = Field(
         None,
         description="Attack category: instruction_override, privilege_escalation, "

@@ -17,10 +17,17 @@ def mock_settings():
 
 @pytest.fixture
 def mock_jwt_encode():
-    with patch(
-        "src.infrastructure.banking.banking_auth.jwt.encode", return_value="signed-jwt"
-    ) as mock:
-        yield mock
+    with (
+        patch(
+            "src.infrastructure.banking.banking_auth.jwt.encode",
+            return_value="signed-jwt",
+        ) as mock_encode,
+        patch(
+            "src.infrastructure.banking.banking_auth.ECAlgorithm.from_jwk",
+            return_value="fake-key",
+        ),
+    ):
+        yield mock_encode
 
 
 @pytest.fixture

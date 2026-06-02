@@ -1,3 +1,4 @@
+import json
 import time
 from datetime import datetime
 from uuid import uuid4
@@ -5,6 +6,7 @@ from uuid import uuid4
 import jwt
 import pytz
 import requests
+from jwt.algorithms import ECAlgorithm
 
 from ...core.config import settings
 from ...core.logger import logger
@@ -42,15 +44,26 @@ class BankingAuth:
         jwt_signed_data = {
             "iat": time_now,
             "exp": time_now + (1000 * 60 * 60 * 24 * 3),  # 3 days
-            "aud": f"https://keycloak.example.com/realms/{settings.REALM_NAME}/protocol/openid-connect/token",
+            "aud": f"https://keycloak.kanastra.dev/realms/{settings.REALM_NAME}/protocol/openid-connect/token",
             "iss": self.client_id,
             "sub": self.client_id,
             "jti": str(uuid4()),
         }
-        jwt_signed = jwt.encode(
-            jwt_signed_data, self.jwt_secret, algorithm=header.get("alg")
-        )
+
+        private_key = self.jwt_secret
+        if isinstance(private_key, str):
+            try:
+                jwk = json.loads(private_key)
+                private_key = ECAlgorithm.from_jwk(jwk)
+            except (json.JSONDecodeError, ValueError):
+                pass
+
         try:
+            jwt_signed = jwt.encode(
+                jwt_signed_data,
+                private_key,
+                algorithm=header.get("alg"),
+            )
             path = "/api/v1/auth/token"
             url = self.__url(path)
             body = {"clientId": self.client_id, "clientAssertion": jwt_signed}
@@ -63,9 +76,7 @@ class BankingAuth:
             self.token_expiration_time = time.time() + expires_in
 
             if self.cache_service:
-                await self.cache_service.set(
-                    "banking:access_token", self.token, ttl=expires_in
-                )
+                await self.cache_service.set("banking:access_token", self.token, ttl=expires_in)
         except Exception as e:
             self.logger.error(f"An error occurred: {e}")
             raise e
@@ -90,6 +101,4 @@ class BankingAuth:
                 self.logger.debug(f"Retrying to acquire token... Attempt {retries + 1}")
                 return await self.get_valid_token(retries + 1)
             else:
-                raise Exception(
-                    "Failed to acquire token after multiple attempts."
-                ) from e
+                raise Exception("Failed to acquire token after multiple attempts.") from e
