@@ -39,7 +39,9 @@ class ResponseService:
             fallback = "Desculpe, ocorreu um erro ao processar sua solicitação. Tente novamente."
             return {"messages": [AIMessage(content=fallback)]}
 
-    def _resolve_scenario(self, command: str, action_success: bool | None, state: GraphState) -> str:
+    def _resolve_scenario(
+        self, command: str, action_success: bool | None, state: GraphState
+    ) -> str:
         if command == "unknown":
             return "unknown"
 

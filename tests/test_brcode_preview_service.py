@@ -27,7 +27,9 @@ def _make_http_error(status_code: int) -> HTTPError:
     return error
 
 
-def _mock_preview_response(amount=10.00, amount_type="FIXED", init_type="DYNAMIC_QR_CODE"):
+def _mock_preview_response(
+    amount=10.00, amount_type="FIXED", init_type="DYNAMIC_QR_CODE"
+):
     return type(
         "BRCodePreviewResponseDTO",
         (),
@@ -108,7 +110,9 @@ def _mock_preview_response(amount=10.00, amount_type="FIXED", init_type="DYNAMIC
 async def test_execute_fixed_amount_success(mock_settings, mock_banking_client):
     mock_settings.FIN_ACCOUNT_ID = "primary-account"
     mock_settings.FIN_ACCOUNT_ID_FALLBACK = ""
-    mock_banking_client.brcode_preview.return_value = _mock_preview_response(amount=10.00, amount_type="FIXED")
+    mock_banking_client.brcode_preview.return_value = _mock_preview_response(
+        amount=10.00, amount_type="FIXED"
+    )
     service = BRCodePreviewService(mock_banking_client)
 
     result = await service.execute({"brcode": _valid_brcode()})
@@ -118,7 +122,9 @@ async def test_execute_fixed_amount_success(mock_settings, mock_banking_client):
     assert result["action_data"]["amount_type"] == "FIXED"
     assert result["withdraw_amount"] == 10.00
     assert result["withdraw_end_to_end_id"] == "E00000000202600001200AbCdEfGhIjKl"
-    mock_banking_client.brcode_preview.assert_awaited_once_with("primary-account", _valid_brcode())
+    mock_banking_client.brcode_preview.assert_awaited_once_with(
+        "primary-account", _valid_brcode()
+    )
 
 
 @pytest.mark.asyncio
@@ -126,7 +132,9 @@ async def test_execute_fixed_amount_success(mock_settings, mock_banking_client):
 async def test_execute_variable_amount_success(mock_settings, mock_banking_client):
     mock_settings.FIN_ACCOUNT_ID = "primary-account"
     mock_settings.FIN_ACCOUNT_ID_FALLBACK = ""
-    mock_banking_client.brcode_preview.return_value = _mock_preview_response(amount=None, amount_type="VARIABLE")
+    mock_banking_client.brcode_preview.return_value = _mock_preview_response(
+        amount=None, amount_type="VARIABLE"
+    )
     service = BRCodePreviewService(mock_banking_client)
 
     result = await service.execute({"brcode": _valid_brcode()})
@@ -139,7 +147,9 @@ async def test_execute_variable_amount_success(mock_settings, mock_banking_clien
 
 @pytest.mark.asyncio
 @patch("src.services.brcode_preview_service.settings")
-async def test_state_enrichment_maps_withdraw_fields(mock_settings, mock_banking_client):
+async def test_state_enrichment_maps_withdraw_fields(
+    mock_settings, mock_banking_client
+):
     mock_settings.FIN_ACCOUNT_ID = "primary-account"
     mock_settings.FIN_ACCOUNT_ID_FALLBACK = ""
     mock_banking_client.brcode_preview.return_value = _mock_preview_response()
@@ -154,7 +164,10 @@ async def test_state_enrichment_maps_withdraw_fields(mock_settings, mock_banking
     assert result["withdraw_beneficiary"]["account"] == "12345"
     assert result["withdraw_beneficiary"]["digit"] == "6"
     assert result["withdraw_beneficiary"]["accountType"] == "checking"
-    assert result["withdraw_beneficiary"]["pixKey"] == "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    assert (
+        result["withdraw_beneficiary"]["pixKey"]
+        == "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    )
     assert result["withdraw_end_to_end_id"] == "E00000000202600001200AbCdEfGhIjKl"
     assert result["withdraw_qr_code"] == _valid_brcode()
     assert result["withdraw_init_type"] == "DYNAMIC_QR_CODE"
@@ -238,7 +251,9 @@ async def test_execute_api_error_4xx(mock_settings, mock_banking_client):
 
 @pytest.mark.asyncio
 @patch("src.services.brcode_preview_service.settings")
-async def test_execute_api_error_retryable_with_fallback(mock_settings, mock_banking_client):
+async def test_execute_api_error_retryable_with_fallback(
+    mock_settings, mock_banking_client
+):
     mock_settings.FIN_ACCOUNT_ID = "primary-account"
     mock_settings.FIN_ACCOUNT_ID_FALLBACK = "fallback-account"
     mock_banking_client.brcode_preview.side_effect = [
@@ -258,7 +273,9 @@ async def test_execute_api_error_retryable_with_fallback(mock_settings, mock_ban
 
 @pytest.mark.asyncio
 @patch("src.services.brcode_preview_service.settings")
-async def test_execute_api_error_retryable_fallback_also_fails(mock_settings, mock_banking_client):
+async def test_execute_api_error_retryable_fallback_also_fails(
+    mock_settings, mock_banking_client
+):
     mock_settings.FIN_ACCOUNT_ID = "primary-account"
     mock_settings.FIN_ACCOUNT_ID_FALLBACK = "fallback-account"
     mock_banking_client.brcode_preview.side_effect = [

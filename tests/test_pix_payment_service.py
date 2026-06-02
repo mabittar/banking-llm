@@ -58,10 +58,15 @@ def _preview_success(status="ACTIVE", amount=Decimal("150.00"), amount_type="FIX
 
 class TestPixPaymentServiceActiveFixed:
     @pytest.mark.asyncio
-    async def test_active_fixed_executes_payment(self, service, mock_preview_service, mock_withdraw_service):
+    async def test_active_fixed_executes_payment(
+        self, service, mock_preview_service, mock_withdraw_service
+    ):
         state = {"brcode": _valid_brcode()}
         mock_preview_service.execute.return_value = _preview_success()
-        mock_withdraw_service.execute.return_value = {"action_success": True, "action_data": {"uuid": "tx-123"}}
+        mock_withdraw_service.execute.return_value = {
+            "action_success": True,
+            "action_data": {"uuid": "tx-123"},
+        }
 
         result = await service.execute(state)
 
@@ -71,10 +76,17 @@ class TestPixPaymentServiceActiveFixed:
 
 class TestPixPaymentServiceActiveCustom:
     @pytest.mark.asyncio
-    async def test_custom_with_amount_executes_payment(self, service, mock_preview_service, mock_withdraw_service):
+    async def test_custom_with_amount_executes_payment(
+        self, service, mock_preview_service, mock_withdraw_service
+    ):
         state = {"brcode": _valid_brcode(), "withdraw_amount": Decimal("50.00")}
-        mock_preview_service.execute.return_value = _preview_success(amount_type="CUSTOM", amount=None)
-        mock_withdraw_service.execute.return_value = {"action_success": True, "action_data": {"uuid": "tx-456"}}
+        mock_preview_service.execute.return_value = _preview_success(
+            amount_type="CUSTOM", amount=None
+        )
+        mock_withdraw_service.execute.return_value = {
+            "action_success": True,
+            "action_data": {"uuid": "tx-456"},
+        }
 
         result = await service.execute(state)
 
@@ -84,9 +96,13 @@ class TestPixPaymentServiceActiveCustom:
         assert call_state["withdraw_amount"] == Decimal("50.00")
 
     @pytest.mark.asyncio
-    async def test_custom_without_amount_returns_awaiting(self, service, mock_preview_service, mock_withdraw_service):
+    async def test_custom_without_amount_returns_awaiting(
+        self, service, mock_preview_service, mock_withdraw_service
+    ):
         state = {"brcode": _valid_brcode()}
-        mock_preview_service.execute.return_value = _preview_success(amount_type="CUSTOM", amount=None)
+        mock_preview_service.execute.return_value = _preview_success(
+            amount_type="CUSTOM", amount=None
+        )
 
         result = await service.execute(state)
 
@@ -97,7 +113,9 @@ class TestPixPaymentServiceActiveCustom:
 
 class TestPixPaymentServiceStatusBlocked:
     @pytest.mark.asyncio
-    async def test_paid_status_blocks_payment(self, service, mock_preview_service, mock_withdraw_service):
+    async def test_paid_status_blocks_payment(
+        self, service, mock_preview_service, mock_withdraw_service
+    ):
         state = {"brcode": _valid_brcode()}
         mock_preview_service.execute.return_value = _preview_success(status="PAID")
 
@@ -109,7 +127,9 @@ class TestPixPaymentServiceStatusBlocked:
         mock_withdraw_service.execute.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_expired_status_blocks_payment(self, service, mock_preview_service, mock_withdraw_service):
+    async def test_expired_status_blocks_payment(
+        self, service, mock_preview_service, mock_withdraw_service
+    ):
         state = {"brcode": _valid_brcode()}
         mock_preview_service.execute.return_value = _preview_success(status="EXPIRED")
 
@@ -123,7 +143,9 @@ class TestPixPaymentServiceStatusBlocked:
 
 class TestPixPaymentServiceContinuation:
     @pytest.mark.asyncio
-    async def test_continuation_skips_preview(self, service, mock_preview_service, mock_withdraw_service):
+    async def test_continuation_skips_preview(
+        self, service, mock_preview_service, mock_withdraw_service
+    ):
         state = {
             "brcode": _valid_brcode(),
             "withdraw_end_to_end_id": "E00000000202600001200AbCdEfGhIjKl",
@@ -133,7 +155,10 @@ class TestPixPaymentServiceContinuation:
             "withdraw_qr_code": _valid_brcode(),
             "withdraw_reconciliation_id": "abc123",
         }
-        mock_withdraw_service.execute.return_value = {"action_success": True, "action_data": {"uuid": "tx-789"}}
+        mock_withdraw_service.execute.return_value = {
+            "action_success": True,
+            "action_data": {"uuid": "tx-789"},
+        }
 
         result = await service.execute(state)
 
@@ -144,7 +169,9 @@ class TestPixPaymentServiceContinuation:
 
 class TestPixPaymentServiceErrors:
     @pytest.mark.asyncio
-    async def test_preview_failure_returns_error(self, service, mock_preview_service, mock_withdraw_service):
+    async def test_preview_failure_returns_error(
+        self, service, mock_preview_service, mock_withdraw_service
+    ):
         state = {"brcode": _valid_brcode()}
         mock_preview_service.execute.return_value = {
             "action_success": False,
@@ -158,9 +185,13 @@ class TestPixPaymentServiceErrors:
         mock_withdraw_service.execute.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_unknown_amount_type_returns_error(self, service, mock_preview_service, mock_withdraw_service):
+    async def test_unknown_amount_type_returns_error(
+        self, service, mock_preview_service, mock_withdraw_service
+    ):
         state = {"brcode": _valid_brcode()}
-        mock_preview_service.execute.return_value = _preview_success(amount_type="UNKNOWN_TYPE", amount=None)
+        mock_preview_service.execute.return_value = _preview_success(
+            amount_type="UNKNOWN_TYPE", amount=None
+        )
 
         result = await service.execute(state)
 
