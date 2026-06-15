@@ -1,3 +1,4 @@
+import json
 import time
 from datetime import datetime
 from uuid import uuid4
@@ -5,6 +6,7 @@ from uuid import uuid4
 import jwt
 import pytz
 import requests
+from jwt.algorithms import ECAlgorithm
 
 from ...core.config import settings
 from ...core.logger import logger
@@ -30,6 +32,14 @@ class BankingAuth:
         self.jwt_secret = settings.JWT_SECRET
         self.token_expiration_time = 0
 
+    @staticmethod
+    def _normalize_private_key(raw_key: str) -> str:
+        """Normalize private key loaded from env (supports escaped newlines)."""
+        normalized = raw_key.strip().strip('"').strip("'")
+        if "\\n" in normalized:
+            normalized = normalized.replace("\\n", "\n")
+        return normalized
+
     def __url(self, url: str) -> str:
         return f"{self.host}{url}"
 
@@ -47,10 +57,22 @@ class BankingAuth:
             "sub": self.client_id,
             "jti": str(uuid4()),
         }
-        jwt_signed = jwt.encode(
-            jwt_signed_data, self.jwt_secret, algorithm=header.get("alg")
-        )
+
+        private_key = self.jwt_secret
+        if isinstance(private_key, str):
+            private_key = self._normalize_private_key(private_key)
+            try:
+                jwk = json.loads(private_key)
+                private_key = ECAlgorithm.from_jwk(jwk)
+            except (json.JSONDecodeError, ValueError):
+                pass
+
         try:
+            jwt_signed = jwt.encode(
+                jwt_signed_data,
+                private_key,
+                algorithm=header.get("alg"),
+            )
             path = "/api/v1/auth/token"
             url = self.__url(path)
             body = {"clientId": self.client_id, "clientAssertion": jwt_signed}
@@ -63,10 +85,15 @@ class BankingAuth:
             self.token_expiration_time = time.time() + expires_in
 
             if self.cache_service:
-                await self.cache_service.set(
-                    "banking:access_token", self.token, ttl=expires_in
-                )
+                await self.cache_service.set("banking:access_token", self.token, ttl=expires_in)
         except Exception as e:
+            response_obj = locals().get("response")
+            if response_obj is not None:
+                self.logger.error(
+                    "Authorization error details",
+                    status_code=response_obj.status_code,
+                    response_text=response_obj.text[:1000],
+                )
             self.logger.error(f"An error occurred: {e}")
             raise e
 
@@ -90,6 +117,4 @@ class BankingAuth:
                 self.logger.debug(f"Retrying to acquire token... Attempt {retries + 1}")
                 return await self.get_valid_token(retries + 1)
             else:
-                raise Exception(
-                    "Failed to acquire token after multiple attempts."
-                ) from e
+                raise Exception("Failed to acquire token after multiple attempts.") from e
