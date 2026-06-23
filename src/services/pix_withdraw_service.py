@@ -34,7 +34,9 @@ class PixWithdrawService:
             if not fin_account_id:
                 return state
             try:
-                key_data = await self._banking_client.read_pix_key(pix_key, fin_account_id)
+                key_data = await self._banking_client.read_pix_key(
+                    pix_key, fin_account_id
+                )
                 beneficiary = key_data.beneficiary
                 state = {**state}
                 state["withdraw_beneficiary"] = {
@@ -144,7 +146,9 @@ class PixWithdrawService:
             if state.get("withdraw_amount_type"):
                 payload["amountType"] = state["withdraw_amount_type"]
             if state.get("withdraw_nominal_amount"):
-                nominal = Decimal(str(state["withdraw_nominal_amount"])).quantize(Decimal("0.01"))
+                nominal = Decimal(str(state["withdraw_nominal_amount"])).quantize(
+                    Decimal("0.01")
+                )
                 payload["nominalAmount"] = float(nominal)
 
         return payload
@@ -167,7 +171,9 @@ class PixWithdrawService:
                     error=str(primary_error),
                 )
                 try:
-                    result = await self._banking_client.pix_transfer(settings.FIN_ACCOUNT_ID_FALLBACK, payload)
+                    result = await self._banking_client.pix_transfer(
+                        settings.FIN_ACCOUNT_ID_FALLBACK, payload
+                    )
                     return {"action_success": True, "action_data": result.model_dump()}
                 except Exception as fallback_error:
                     return {

@@ -22,7 +22,9 @@ class IntentService:
 
             system_prompt = get_system_prompt()
             user_prompt = get_user_prompt(input_text)
-            result: IntentResult = await self._llm_service.generate_structured(system_prompt, user_prompt, IntentResult)
+            result: IntentResult = await self._llm_service.generate_structured(
+                system_prompt, user_prompt, IntentResult
+            )
 
             state_update = {
                 "command": result.intent,

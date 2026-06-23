@@ -61,7 +61,9 @@ def build_graph(
     workflow.add_node("listKeys", create_list_keys_node(pix_key_service))
     workflow.add_node("readKey", create_read_key_node(pix_key_service))
     workflow.add_node("pixWithdraw", create_pix_withdraw_node(pix_withdraw_service))
-    workflow.add_node("brcodePreview", create_brcode_preview_node(brcode_preview_service))
+    workflow.add_node(
+        "brcodePreview", create_brcode_preview_node(brcode_preview_service)
+    )
     workflow.add_node("pixPayment", create_pix_payment_node(pix_payment_service))
     workflow.add_node("fallback", fallback_node)
     workflow.add_node("chatResponse", create_chat_response_node(response_service))

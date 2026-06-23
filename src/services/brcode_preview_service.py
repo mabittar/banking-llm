@@ -59,7 +59,9 @@ class BRCodePreviewService:
                     error=str(primary_error),
                 )
                 try:
-                    response = await self._banking_client.brcode_preview(settings.FIN_ACCOUNT_ID_FALLBACK, brcode)
+                    response = await self._banking_client.brcode_preview(
+                        settings.FIN_ACCOUNT_ID_FALLBACK, brcode
+                    )
                     return self._enrich_state(response)
                 except Exception as fallback_error:
                     return {
@@ -71,7 +73,9 @@ class BRCodePreviewService:
     def _enrich_state(self, response) -> dict:
         beneficiary = response.beneficiary
         data = response.model_dump()
-        data["beneficiary"]["government_id"] = self._mask_government_id(beneficiary.government_id)
+        data["beneficiary"]["government_id"] = self._mask_government_id(
+            beneficiary.government_id
+        )
 
         return {
             "action_success": True,
