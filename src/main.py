@@ -9,6 +9,8 @@ from .core.config import BaseSettings, settings
 from .core.health_check import health_router
 from .core.logger import logger
 from .core.middleware import LoggingMiddleware
+from .core.observability import setup as setup_telemetry
+from .core.observability.fastapi_instrumentation import instrument_fastapi_app
 from .infrastructure.cache.cache_service import RedisCacheService
 
 
@@ -46,8 +48,13 @@ class App:
 
 
 def initialize_application() -> FastAPI:
+    # Telemetry must be bootstrapped before any instrumented component is built,
+    # so providers exist when the FastAPI app and IO clients are wired.
+    setup_telemetry(settings)
     cache = RedisCacheService()
-    return App(settings=settings, cache=cache, lifespan=lifespan)()
+    app = App(settings=settings, cache=cache, lifespan=lifespan)()
+    instrument_fastapi_app(app)
+    return app
 
 
 app = initialize_application()
