@@ -94,6 +94,39 @@ class BaseSettings(PydanticBaseSettings):
     DB_HOST: str = Field("localhost", description="PostgreSQL host.")
     DB_PORT: int = Field(5432, description="PostgreSQL port.")
 
+    # Observability (OpenTelemetry). All signals are no-op while OTEL_ENABLED is false.
+    OTEL_ENABLED: bool = Field(
+        False, description="Master switch for all telemetry. No-op when false."
+    )
+    OTEL_SERVICE_NAME: str = Field(
+        "langchain-pix-environment",
+        description="service.name reported in the Resource.",
+    )
+    OTEL_EXPORTER_OTLP_ENDPOINT: str = Field(
+        "http://otel-collector:4317", description="OTLP endpoint of the Collector."
+    )
+    OTEL_EXPORTER_OTLP_PROTOCOL: str = Field(
+        "grpc", description="OTLP transport: 'grpc' or 'http/protobuf'."
+    )
+    OTEL_TRACES_SAMPLER_ARG: float = Field(
+        1.0, description="Trace sampling ratio (1.0 = 100%, suited for dev)."
+    )
+    OTEL_METRICS_ENABLED: bool = Field(
+        True, description="Enable the metrics pipeline when telemetry is on."
+    )
+    OTEL_LOGS_EXPORT_ENABLED: bool = Field(
+        True, description="Enable OTLP log export when telemetry is on."
+    )
+    GRAFANA_MCP_ENABLED: bool = Field(
+        False, description="Enable the optional Grafana MCP service."
+    )
+    GRAFANA_URL: str = Field(
+        "http://grafana:3000", description="Grafana URL consumed by the MCP server."
+    )
+    GRAFANA_SERVICE_ACCOUNT_TOKEN: str = Field(
+        "", description="Read-only (Viewer) Grafana service account token for the MCP."
+    )
+
     @field_validator("REDIS_PASSWORD", mode="before")
     @classmethod
     def _parse_redis_password(cls, v: str | None) -> str | None:
