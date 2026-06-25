@@ -1,9 +1,17 @@
 # LangChain Pix Environment — Macro Definitions
 
 **Date**: 22/05/2026
-**Last Update**: 22/05/2026
-**Version**: 2.0
+**Last Update**: 25/06/2026
+**Version**: 2.1
 **Priority**: HIGH
+
+**Changelog v2.1**:
+
+- Added OpenTelemetry observability layer (traces, metrics, logs) with no-op-by-default toggle (`OTEL_ENABLED`)
+- Added `src/core/observability/` package and domain span/metrics utilities
+- Added observability stack to docker-compose (OTel Collector, Tempo, Jaeger, Prometheus, Loki, Grafana, grafana-mcp)
+- Added `OTEL_*` / `GRAFANA_*` settings and `[observability]` optional dependency group
+- See [ADR 02 — Observability](02-observability.md)
 
 **Changelog v2.0**:
 
@@ -395,6 +403,25 @@ classDiagram
 | LLM API Key            | `OPENROUTER_API_KEY` stored in env; passed to `ChatOpenAI` constructor                     |
 | CORS                   | Currently not configured — recommended before production deployment                        |
 
+## Observability Architecture
+
+OpenTelemetry instrumentation (traces, metrics, logs) exported via OTLP to an OpenTelemetry Collector. Disabled by default (`OTEL_ENABLED=false`): with no flag, no providers/exporters are created and the telemetry code is a no-op. Detailed rationale in [ADR 02 — Observability](02-observability.md).
+
+| Signal  | What is captured                                                                                                  | Backend            |
+| ------- | ----------------------------------------------------------------------------------------------------------------- | ------------------ |
+| Traces  | Enriched HTTP root span; domain spans per graph node (`graph.*`, `pix.*`, `llm.*`); IO spans (banking/Redis/PG); LLM spans + tokens (OpenInference) | Tempo + Jaeger     |
+| Metrics | HTTP RED; `pix_operations_total`; `graph_node_duration_seconds`; `guardrail_block_total`; LLM tokens/latency (push OTLP) | Prometheus         |
+| Logs    | `structlog` JSON (non-dev) with `trace_id`/`span_id` correlation                                                  | Loki               |
+
+| Aspect           | Decision                                                                                       |
+| ---------------- | ---------------------------------------------------------------------------------------------- |
+| Toggle           | `OTEL_ENABLED` kill-switch; no-op by default (zero overhead, no network dependency)            |
+| Bootstrap order  | `observability.setup()` runs first in `src/main.py`, before instrumented modules are imported  |
+| Domain isolation | Instrumentation lives in `src/core/observability/`; nodes/services use a `domain_span` utility |
+| Privacy          | PIX keys, `government_id`, tokens and secrets masked across span attributes, metric labels, logs |
+| Metric delivery  | Push OTLP → Collector → Prometheus (no `/metrics` endpoint on the app)                          |
+| Agent access     | `grafana-mcp` read-only (Viewer service account), opt-in via compose profile                   |
+
 ## Operational Architecture
 
 ### Environment Variables Required
@@ -423,10 +450,19 @@ classDiagram
 
 ### Infrastructure (docker-compose)
 
-| Service  | Image                  | Port      | Purpose                                                    |
-| -------- | ---------------------- | --------- | ---------------------------------------------------------- |
-| pgvector | pgvector/pgvector:pg17 | 5433:5432 | PostgreSQL with vector extensions (LangGraph checkpointer) |
-| cache    | redis:latest           | 6379:6379 | Redis cache for tokens and data                            |
+| Service        | Image                          | Port                | Purpose                                                    |
+| -------------- | ------------------------------ | ------------------- | ---------------------------------------------------------- |
+| pgvector       | pgvector/pgvector:pg17         | 5433:5432           | PostgreSQL with vector extensions (LangGraph checkpointer) |
+| cache          | redis:latest                   | 6379:6379           | Redis cache for tokens and data                            |
+| otel-collector | otel/opentelemetry-collector   | 4317/4318/8889      | Receives OTLP; fans out to traces/metrics/logs backends    |
+| tempo          | grafana/tempo                  | 3200                | Trace storage backend                                      |
+| jaeger         | jaegertracing/all-in-one       | 16686               | Trace exploration UI                                       |
+| prometheus     | prom/prometheus                | 9090                | Metrics storage + PromQL                                   |
+| loki           | grafana/loki                   | 3100                | Log storage backend                                        |
+| grafana        | grafana/grafana                | 3000                | Dashboards + trace/log correlation                         |
+| grafana-mcp    | mcp/grafana                    | 8001:8000 (profile) | Read-only MCP access for agents (opt-in)                   |
+
+> The observability services run only when the stack is started (`make observability-up`); the app emits telemetry only when `OTEL_ENABLED=true`.
 
 ### Local Development
 
@@ -436,6 +472,12 @@ make server          # uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 make langgraph       # langgraph dev
 make tests           # pytest
 make lint            # ruff check
+
+# Observability (opt-in)
+make install-observability  # pip install -e ".[observability]"
+make observability-up       # start Collector + Tempo + Jaeger + Prometheus + Loki + Grafana
+make server-otel            # run app with OTEL_ENABLED=true
+make observability-mcp-up   # start grafana-mcp (read-only)
 ```
 
 ## Testing Strategy
@@ -474,7 +516,8 @@ src/
 │   ├── config.py                   # pydantic-settings + env loading
 │   ├── health_check.py             # GET /health endpoint
 │   ├── logger.py                   # structlog configuration
-│   └── middleware.py               # Request/response logging + masking
+│   ├── middleware.py               # Request/response logging + masking
+│   └── observability/              # OpenTelemetry bootstrap, domain spans/metrics, masking
 ├── graph/
 │   ├── factory.py                  # GraphProcessor factory + singleton
 │   ├── graph.py                    # StateGraph build + conditional routing
@@ -531,5 +574,5 @@ src/
 - [ ] More PIX operations (create key, delete key)
 - [ ] Authentication on /chat endpoint (API key or OAuth)
 - [ ] CI/CD pipeline (GitHub Actions: lint → test → build → deploy)
-- [ ] Observability (OpenTelemetry / LangSmith)
+- [x] Observability (OpenTelemetry) — see [ADR 02](02-observability.md)
 - [ ] CORS configuration for production
