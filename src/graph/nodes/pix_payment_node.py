@@ -1,4 +1,5 @@
 from ...core.logger import logger
+from ...core.observability import domain_span
 from ...services.pix_payment_service import PixPaymentService
 from ..state import GraphState
 
@@ -14,6 +15,7 @@ def create_pix_payment_node(pix_payment_service: PixPaymentService):
                 else None
             ),
         )
-        return await pix_payment_service.execute(state)
+        with domain_span("pix.payment.execute", **{"graph.node": "pixPayment"}):
+            return await pix_payment_service.execute(state)
 
     return pix_payment_node
