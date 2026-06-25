@@ -1,4 +1,5 @@
 from ...core.logger import logger
+from ...core.observability import domain_span
 from ...services.brcode_preview_service import BRCodePreviewService
 from ..state import GraphState
 
@@ -9,6 +10,7 @@ def create_brcode_preview_node(brcode_preview_service: BRCodePreviewService):
             "BRCode preview node",
             brcode=state.get("brcode", "")[:30] if state.get("brcode") else None,
         )
-        return await brcode_preview_service.execute(state)
+        with domain_span("pix.brcode.preview", **{"graph.node": "brcodePreview"}):
+            return await brcode_preview_service.execute(state)
 
     return brcode_preview_node

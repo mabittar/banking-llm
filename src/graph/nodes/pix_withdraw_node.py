@@ -1,4 +1,5 @@
 from ...core.logger import logger
+from ...core.observability import domain_span
 from ...services.pix_withdraw_service import PixWithdrawService
 from ..state import GraphState
 
@@ -11,6 +12,14 @@ def create_pix_withdraw_node(pix_withdraw_service: PixWithdrawService):
             withdraw_amount=str(state.get("withdraw_amount")),
             withdraw_init_type=state.get("withdraw_init_type"),
         )
-        return await pix_withdraw_service.execute(state)
+        with domain_span(
+            "pix.withdraw.execute",
+            **{
+                "graph.node": "pixWithdraw",
+                "pix.init_type": state.get("withdraw_init_type"),
+                "pix.key.masked": state.get("pix_key"),
+            },
+        ):
+            return await pix_withdraw_service.execute(state)
 
     return pix_withdraw_node
