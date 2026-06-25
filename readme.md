@@ -247,6 +247,20 @@ DB_USER=postgres
 DB_PASSWORD=mysecretpassword
 DB_HOST=localhost
 DB_PORT=5433
+
+# Observabilidade (OpenTelemetry) - desligado por padrão
+OTEL_ENABLED=false
+OTEL_SERVICE_NAME=langchain-pix-environment
+OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+OTEL_TRACES_SAMPLER_ARG=1.0
+OTEL_METRICS_ENABLED=true
+OTEL_LOGS_EXPORT_ENABLED=true
+
+# Grafana MCP (read-only) - opcional
+GRAFANA_MCP_ENABLED=false
+GRAFANA_URL=http://grafana:3000
+GRAFANA_SERVICE_ACCOUNT_TOKEN=
 ```
 
 ---
@@ -260,7 +274,77 @@ make server         # Inicia o servidor FastAPI (hot-reload)
 make langgraph      # Inicia o LangGraph dev server
 make lint           # Executa o linter (ruff)
 make tests          # Roda os testes
+
+# Observabilidade (OpenTelemetry)
+make install-observability  # Instala o extra opcional [observability]
+make observability-up       # Sobe a stack (Collector, Tempo, Jaeger, Prometheus, Loki, Grafana)
+make observability-down     # Derruba a stack de observabilidade
+make server-otel            # Sobe a app com OTEL_ENABLED=true apontando para o Collector local
+make observability-mcp-up   # Sobe o grafana-mcp (read-only) para consulta por agentes
 ```
+
+---
+
+## Observabilidade (OpenTelemetry)
+
+A aplicação é instrumentada com OpenTelemetry (traces, métricas e logs), exportando via OTLP para um OpenTelemetry Collector. A instrumentação é **desligada por padrão** (`OTEL_ENABLED=false`): sem o flag, não há providers, exporters nem overhead de rede — o código de telemetria opera em modo no-op.
+
+### Arquitetura dos sinais
+
+```
+          app (OTLP gRPC 4317)
+                 │
+                 ▼
+        OpenTelemetry Collector
+          ├── traces  ─▶ Tempo + Jaeger
+          ├── metrics ─▶ Prometheus
+          └── logs    ─▶ Loki
+                 │
+                 ▼
+              Grafana  ◀── grafana-mcp (read-only)
+```
+
+- **Traces**: span raiz HTTP enriquecido (rota legível, `http.route`, `app.handler`), spans de domínio por nó do grafo (`graph.intent.identify`, `pix.withdraw.execute`, ...), spans de IO (banking API, Redis, PostgreSQL) e spans de LLM com tokens (OpenInference).
+- **Métricas**: RED de HTTP, `pix_operations_total`, `graph_node_duration_seconds`, `guardrail_block_total`, tokens/latência de LLM — exportadas via push OTLP (sem endpoint `/metrics` na app).
+- **Logs**: `structlog` em JSON fora de dev, com correlação `trace_id`/`span_id` injetada automaticamente quando há span ativo.
+- **Privacidade**: chaves PIX, `government_id`, tokens e secrets são mascarados em atributos de span, labels de métrica e logs.
+
+### Como rodar localmente
+
+```sh
+# 1. instalar o extra opcional de observabilidade
+make install-observability
+
+# 2. subir a stack de backends (Collector + Tempo + Jaeger + Prometheus + Loki + Grafana)
+make observability-up
+
+# 3. subir a app instrumentada apontando para o Collector
+make server-otel
+```
+
+### UIs
+
+| Ferramenta | URL                      | Uso                              |
+| ---------- | ------------------------ | -------------------------------- |
+| Grafana    | http://localhost:3000    | Dashboards + correlação trace↔log |
+| Jaeger     | http://localhost:16686   | Exploração de traces             |
+| Prometheus | http://localhost:9090    | Consulta de métricas (PromQL)    |
+
+Os datasources (Prometheus/Tempo/Loki) e os dashboards ("Visão Geral do Serviço", "Operações PIX") são provisionados automaticamente no Grafana.
+
+### Acesso por agente (Grafana MCP)
+
+O serviço `grafana-mcp` expõe Tempo/Loki/Prometheus a um agente LLM em modo **read-only** (service account Viewer). Ele fica em um profile opcional e não sobe por padrão:
+
+```sh
+make observability-mcp-up
+```
+
+Configure o token Viewer em `GRAFANA_SERVICE_ACCOUNT_TOKEN` antes de subir o serviço.
+
+Detalhes da decisão arquitetural: [docs/adr/02-observability.md](docs/adr/02-observability.md).
+
+---
 
 ---
 
@@ -450,7 +534,7 @@ src/
 - [ ] Adicionar autenticação no endpoint /chat
 - [x] Dockerfile para deploy containerizado
 - [ ] CI/CD pipeline com GitHub Actions
-- [ ] Observabilidade (OpenTelemetry / LangSmith)
+- [x] Observabilidade (OpenTelemetry)
 - [ ] Após autenticação buscar contas do cliente ativamente.
 
 ## Contact
