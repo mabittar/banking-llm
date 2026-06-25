@@ -93,7 +93,9 @@ class BankingAuth:
             self.token_expiration_time = time.time() + expires_in
 
             if self.cache_service:
-                await self.cache_service.set("banking:access_token", self.token, ttl=expires_in)
+                await self.cache_service.set(
+                    "banking:access_token", self.token, ttl=expires_in
+                )
         except Exception as e:
             response_obj = locals().get("response")
             if response_obj is not None:
@@ -125,4 +127,6 @@ class BankingAuth:
                 self.logger.debug(f"Retrying to acquire token... Attempt {retries + 1}")
                 return await self.get_valid_token(retries + 1)
             else:
-                raise Exception("Failed to acquire token after multiple attempts.") from e
+                raise Exception(
+                    "Failed to acquire token after multiple attempts."
+                ) from e

@@ -50,7 +50,11 @@ async def health_check(request: Request):
     else:
         services["postgresql"] = "not_configured"
 
-    http_status = status.HTTP_200_OK if overall_status == "ok" else status.HTTP_503_SERVICE_UNAVAILABLE
+    http_status = (
+        status.HTTP_200_OK
+        if overall_status == "ok"
+        else status.HTTP_503_SERVICE_UNAVAILABLE
+    )
     return JSONResponse(
         content={"status": overall_status, "services": services},
         status_code=http_status,

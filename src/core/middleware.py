@@ -1,35 +1,15 @@
 import json
 import time
 from collections.abc import Callable
-from typing import Any
 
 from fastapi import Request, Response
 from starlette.concurrency import iterate_in_threadpool
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from .logger import logger
+from .observability.masking import SENSITIVE_KEYS, mask_sensitive_data
 
-SENSITIVE_KEYS = {
-    "password",
-    "token",
-    "secret",
-    "api_key",
-    "authorization",
-    "key",
-    "api-key",
-}
-
-
-def mask_sensitive_data(data: Any) -> Any:
-    """Recursively mask sensitive keys in a dictionary or list."""
-    if isinstance(data, dict):
-        return {
-            k: ("********" if k.lower() in SENSITIVE_KEYS else mask_sensitive_data(v))
-            for k, v in data.items()
-        }
-    elif isinstance(data, list):
-        return [mask_sensitive_data(item) for item in data]
-    return data
+__all__ = ["LoggingMiddleware", "mask_sensitive_data", "SENSITIVE_KEYS"]
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):
