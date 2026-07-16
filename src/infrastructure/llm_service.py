@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from ..core.config import AppEnvironment, settings
 from ..core.logger import logger
+from ..core.observability.domain_metrics import record_llm_tokens
 
 
 def _create_llm(log) -> BaseChatModel:
@@ -63,6 +64,10 @@ class LLMService:
         if isinstance(result, dict) and "raw" in result:
             token_usage = result["raw"].response_metadata.get("token_usage", {})
             self.logger.info("LLM token usage", token_usage=token_usage)
+            total_tokens = token_usage.get("total_tokens")
+            if total_tokens:
+                model_name = getattr(self.llm, "model_name", getattr(self.llm, "model", "unknown"))
+                record_llm_tokens(model_name, total_tokens)
             parsed_result = result["parsed"]
         else:
             parsed_result = result

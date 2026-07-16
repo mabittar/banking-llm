@@ -8,6 +8,7 @@ from langchain_openai import ChatOpenAI
 
 from ..core.config import AppEnvironment, settings
 from ..core.logger import logger
+from ..core.observability.domain_metrics import record_llm_tokens
 from ..graph.prompts.guardrail import (
     GuardrailResult,
     get_guardrail_system_prompt,
@@ -91,6 +92,10 @@ class GuardrailService:
         if isinstance(result, dict) and "raw" in result:
             token_usage = result["raw"].response_metadata.get("token_usage", {})
             logger.info("Guardrail token usage", token_usage=token_usage)
+            total_tokens = token_usage.get("total_tokens")
+            if total_tokens:
+                model_name = getattr(self.safeguard_llm, "model_name", getattr(self.safeguard_llm, "model", "unknown"))
+                record_llm_tokens(model_name, total_tokens)
             return result["parsed"]
             
         return result  # type: ignore

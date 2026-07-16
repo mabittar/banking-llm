@@ -30,6 +30,10 @@ class _DomainMetrics:
             "guardrail_block_total",
             description="Guardrail decisions by result.",
         )
+        self.llm_tokens = meter.create_counter(
+            "llm_token_count_total",
+            description="LLM token usage by model.",
+        )
 
 
 _cache: dict[int, _DomainMetrics] = {}
@@ -71,4 +75,11 @@ def record_guardrail_block(blocked: bool) -> None:
     """Increment the guardrail decision counter."""
     _instruments().guardrail_blocks.add(
         1, {"result": "blocked" if blocked else "allowed"}
+    )
+
+
+def record_llm_tokens(model_name: str, count: int) -> None:
+    """Increment the LLM tokens counter."""
+    _instruments().llm_tokens.add(
+        count, {"llm_model": model_name}
     )
