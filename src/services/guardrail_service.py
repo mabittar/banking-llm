@@ -90,9 +90,18 @@ class GuardrailService:
         result = await structured_llm.ainvoke(messages)
         
         if isinstance(result, dict) and "raw" in result:
-            token_usage = result["raw"].response_metadata.get("token_usage", {})
-            logger.info("Guardrail token usage", token_usage=token_usage)
+            metadata = result["raw"].response_metadata
+            token_usage = metadata.get("token_usage", {})
             total_tokens = token_usage.get("total_tokens")
+
+            if not total_tokens:
+                prompt_tokens = metadata.get("prompt_eval_count", 0)
+                completion_tokens = metadata.get("eval_count", 0)
+                if prompt_tokens or completion_tokens:
+                    total_tokens = prompt_tokens + completion_tokens
+
+            logger.info("Guardrail token usage", metadata=metadata)
+            
             if total_tokens:
                 model_name = getattr(self.safeguard_llm, "model_name", getattr(self.safeguard_llm, "model", "unknown"))
                 record_llm_tokens(model_name, total_tokens)

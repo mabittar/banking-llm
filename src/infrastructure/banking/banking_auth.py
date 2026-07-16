@@ -6,7 +6,10 @@ from uuid import uuid4
 import jwt
 import pytz
 import requests
+import urllib3
 from jwt.algorithms import ECAlgorithm
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 from ...core.config import settings
 from ...core.logger import logger
@@ -68,12 +71,12 @@ class BankingAuth:
         private_key = self.jwt_secret
         if isinstance(private_key, str):
             private_key = self._normalize_private_key(private_key)
-            try:
-                jwk = json.loads(private_key)
-                private_key = ECAlgorithm.from_jwk(jwk)
-            except (json.JSONDecodeError, ValueError) as e:
-                self.logger.error(f"Failed to load private key from JWK: {e}")
-                pass
+            if private_key.startswith("{"):
+                try:
+                    jwk = json.loads(private_key)
+                    private_key = ECAlgorithm.from_jwk(jwk)
+                except (json.JSONDecodeError, ValueError) as e:
+                    self.logger.error(f"Failed to load private key from JWK: {e}")
 
         try:
             jwt_signed = jwt.encode(
