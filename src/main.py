@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
 from .chat.router import chat_router
@@ -37,6 +38,13 @@ class App:
         self.__add_routes()
 
     def __setup_middleware(self):
+        self.__app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["*"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
         self.__app.add_middleware(LoggingMiddleware)
 
     def __add_routes(self):
