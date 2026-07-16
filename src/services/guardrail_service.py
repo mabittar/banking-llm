@@ -42,14 +42,22 @@ def _create_safeguard_llm():
         return ChatOllama(
             model=settings.GUARDRAIL_MODEL,
             base_url=settings.OLLAMA_BASE_URL,
-            temperature=0,
+            temperature=settings.LLM_TEMPERATURE,
+            top_k=settings.LLM_TOP_K,
+            top_p=settings.LLM_TOP_P,
         )
     http_client = httpx.AsyncClient(verify=False)
     return ChatOpenAI(
         api_key=settings.OPENROUTER_API_KEY,
         base_url=settings.OPENROUTER_BASE_URL,
         model=settings.GUARDRAIL_MODEL,
-        temperature=0,
+        temperature=settings.LLM_TEMPERATURE,
+        model_kwargs={
+            "extra_body": {
+                "top_k": settings.LLM_TOP_K,
+                "top_p": settings.LLM_TOP_P,
+            }
+        },
         http_async_client=http_client,
     )
 
@@ -71,12 +79,20 @@ class GuardrailService:
         return None
 
     async def _check_safeguard_model(self, user_input: str) -> GuardrailResult:
-        structured_llm = self.safeguard_llm.with_structured_output(GuardrailResult)
+        structured_llm = self.safeguard_llm.with_structured_output(
+            GuardrailResult, include_raw=True
+        )
         messages = [
             SystemMessage(content=get_guardrail_system_prompt()),
             HumanMessage(content=get_guardrail_user_prompt(user_input)),
         ]
         result = await structured_llm.ainvoke(messages)
+        
+        if isinstance(result, dict) and "raw" in result:
+            token_usage = result["raw"].response_metadata.get("token_usage", {})
+            logger.info("Guardrail token usage", token_usage=token_usage)
+            return result["parsed"]
+            
         return result  # type: ignore
 
     async def check(self, user_input: str) -> dict:
