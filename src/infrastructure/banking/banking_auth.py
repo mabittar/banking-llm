@@ -44,6 +44,13 @@ class BankingAuth:
         return f"{self.host}{url}"
 
     async def login(self):
+        if not self.client_id:
+            raise ValueError("CLIENT_ID is required for banking authentication")
+        if not settings.AUDIENCE:
+            raise ValueError("AUDIENCE is required for banking authentication")
+        if not self.jwt_secret:
+            raise ValueError("JWT_SECRET is required for banking authentication")
+
         header = {
             "alg": "ES512",
             "typ": "JWT",
@@ -51,7 +58,7 @@ class BankingAuth:
         time_now = int(time.time())
         jwt_signed_data = {
             "iat": time_now,
-            "exp": time_now + (1000 * 60 * 60 * 24 * 3),  # 3 days
+            "exp": time_now + (60 * 60 * 24 * 3),  # 3 days
             "aud": settings.AUDIENCE,
             "iss": self.client_id,
             "sub": self.client_id,
@@ -64,7 +71,8 @@ class BankingAuth:
             try:
                 jwk = json.loads(private_key)
                 private_key = ECAlgorithm.from_jwk(jwk)
-            except (json.JSONDecodeError, ValueError):
+            except (json.JSONDecodeError, ValueError) as e:
+                self.logger.error(f"Failed to load private key from JWK: {e}")
                 pass
 
         try:
