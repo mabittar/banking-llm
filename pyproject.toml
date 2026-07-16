@@ -42,6 +42,7 @@ dependencies = [
 observability = [
     "opentelemetry-sdk>=1.30.0",
     "opentelemetry-exporter-otlp>=1.30.0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.30.0",
     "opentelemetry-instrumentation-fastapi>=0.51b0",
     "opentelemetry-instrumentation-requests>=0.51b0",
     "opentelemetry-instrumentation-redis>=0.51b0",
