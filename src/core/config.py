@@ -49,6 +49,11 @@ class BaseSettings(PydanticBaseSettings):
         description="Model for Ollama.",
     )
 
+    # LLM Options
+    LLM_TEMPERATURE: float = Field(0.1, description="Temperature for LLM generation.")
+    LLM_TOP_K: int = Field(40, description="Top-k sampling parameter.")
+    LLM_TOP_P: float = Field(0.9, description="Top-p sampling parameter.")
+
     # Banking
     CLIENT_ID: str = Field("", description="Client ID for banking.")
     REALM_NAME: str = Field("", description="Realm name for banking.")
